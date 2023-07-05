@@ -5,6 +5,11 @@ date: "2023-06-21"
 output: html_document
 ---
 
+```{r load FFTrees}
+require(FFTrees)
+```
+
+
 # Define Loop functions (for multiple simulations) ----
 
 "_T" because here, the functions are defined differently: A tree is always built with the new data set. New combinations are therefore possible, (e.g. NA can be used as category in character variables). We thereby allow for compensation and hence have slightly better outcomes than when applying the original tree to data with a certain percentage of missings. 

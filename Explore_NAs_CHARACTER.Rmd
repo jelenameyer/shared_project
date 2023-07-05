@@ -4,6 +4,12 @@ author: "Jelena Meyer"
 date: "2023-06-12"
 output: html_document
 ---
+
+```{r load FFTrees}
+require(FFTrees)
+```
+
+
 ```{r setup, include = FALSE}
 # load packages
 library(dplyr)

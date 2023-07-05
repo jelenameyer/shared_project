@@ -5,6 +5,13 @@ date: "2023-06-12"
 output: html_document
 ---
 
+
+```{r load FFTrees}
+
+require(FFTrees)
+```
+
+
 ```{r Baseline}
 
 #Build tree for normal data set:

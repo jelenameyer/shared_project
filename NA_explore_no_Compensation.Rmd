@@ -5,6 +5,10 @@ date: "2023-06-14"
 output: html_document
 ---
 
+```{r load FFTrees}
+require(FFTrees)
+```
+
 # Additional interest: No compensation
 Besides investigating the performance of newly built trees, we are also interested in the trees performance using the tree that was the best when there was no missing data in the data set yet.
 

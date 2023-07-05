@@ -5,6 +5,10 @@ date: "2023-07-05"
 output: html_document
 ---
 
+```{r load FFTrees}
+require(FFTrees)
+```
+
 ```{r Preparations}
 
 # get name of data set:

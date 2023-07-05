@@ -4,6 +4,10 @@ author: "JM and HN"
 date: "2023-06-21"
 output: html_document
 ---
+```{r load FFTrees}
+require(FFTrees)
+```
+
 
 # Define Loop functions (for multiple simulations) ----
 
