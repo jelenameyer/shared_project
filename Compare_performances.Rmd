@@ -1,0 +1,651 @@
+---
+title: "Compare_Performances"
+author: "JM and HN"
+date: "2023-07-06"
+output: html_document
+---
+```{r setup}
+# load packages:
+require(FFTrees)
+library(dplyr)
+```
+
+```{r baseline}
+# build example tree with heartdisease: ----
+heart.fft <- FFTrees(formula = diagnosis ~ .,
+                     data = heartdisease,
+                     main = "Heart Disease")
+
+# plot results:
+plot(heart.fft)
+
+# define summary statistic:
+x_summary <- summary(heart.fft)
+
+# FOR COMPARISON, old performance: ----
+
+# important variables:
+# number of cases:
+n <- x_summary$stats$train$n[1]
+
+# number of hits:
+HIT <- x_summary$stats$train$hi[1]
+
+# number of false alarms:
+FA <- x_summary$stats$train$fa[1]
+
+# number of misses:
+MI <- x_summary$stats$train$mi[1]
+
+# number of correct rejections:
+CR <- x_summary$stats$train$cr[1]
+
+# Build table for overview: 
+# collect values in vector:
+values_o <- c(HIT, MI, FA, CR)
+
+# Define the column and row names:
+col_names_o <- c("TRUE (reality)", "FALSE (reality)")
+row_names_o <- c("TRUE (decision)", "FALSE (decision)")
+
+# Create a matrix with the values:
+matrix_values_o <- matrix(values_o, nrow = length(row_names_o), ncol = length(col_names_o))
+
+# Create a data frame:
+original_table <-  data.frame(matrix_values_o, row.names = row_names_o)
+
+# Rename the columns:
+colnames(original_table) <- col_names_o
+
+# Print the original table:
+print(original_table)
+
+# old performance in pc: ----
+
+# Define the multiplication factor:
+factor <- 100
+
+# Multiply each cell by the factor and divide by n:
+pc_original_table <- original_table %>%
+  mutate(across(everything(), ~ (. * factor) / n))
+
+
+# new column names:
+col_names_o <- c("TRUE (reality) %", "FALSE (reality) %")
+
+# Rename the columns:
+colnames(pc_original_table) <- col_names_o
+
+# Print the new data frame:
+print(pc_original_table)
+```
+
+```{r 1_IDK_last_node}
+# get necessary variables: ----
+# define summary statistic:
+x_summary <- summary(heart.fft)
+
+# number of cases:
+n <- x_summary$stats$train$n[1]
+
+# number of hits:
+HIT <- x_summary$stats$train$hi[1]
+
+# number of false alarms:
+FA <- x_summary$stats$train$fa[1]
+
+# number of misses:
+MI <- x_summary$stats$train$mi[1]
+
+# number of correct rejections:
+CR <- x_summary$stats$train$cr[1]
+
+# define number of nodes that are in the tree:
+nodes <- x_summary$definitions$nodes[1]
+
+
+# define percentage that is missing in every variable of the data: ----
+pc <- 0.25 # for example
+
+
+# In this variant all data with missings is passed on to the next node and processed there.
+# Only missings in all variables (which are used for the FFTree) are then put in category IDK.
+
+# number of missings in all categories:
+p <- pc^nodes
+p
+
+# build table with new performance data:
+# Define the values for each cell:
+hit <- HIT - (HIT * p)
+IDK_hit <- HIT * p
+IDK_mi <- MI * p
+mi <- MI - (MI * p)
+fa <- FA - (FA * p)
+IDK_fa <- FA * p
+IDK_cr <- CR * p
+cr <- CR - (CR * p)
+
+# collect in vector:
+values <- c(hit, IDK_hit, IDK_mi, mi, fa, IDK_fa, IDK_cr, cr)
+
+# Define the column and row names:
+col_names <- c("TRUE (reality)", "FALSE (reality)")
+row_names <- c("TRUE (decision)", "IDK_TRUE (decision)", "IDK_FALSE (decision)", "FALSE (decision)")
+
+# Create a matrix with the values:
+matrix_values <- matrix(values, nrow = length(row_names), ncol = length(col_names))
+
+# Create a data frame:
+table <- data.frame(matrix_values, row.names = row_names)
+
+# Rename the columns:
+colnames(table) <- col_names
+
+# Print the table:
+print(table)
+
+# check whether sum is correct:
+sum(as.matrix(table))
+
+
+# Calculate the percentages:----
+# Define the multiplication factor:
+factor <- 100
+
+# Multiply each cell by the factor and divide by n:
+pc_table <- table %>%
+  mutate(across(everything(), ~ (. * factor) / n))
+
+# new column names:
+col_names <- c("TRUE (reality) %", "FALSE (reality) %")
+
+# Rename the columns:
+colnames(pc_table) <- col_names
+
+# Print the new data frame:
+print(pc_table)
+
+# check whether sum is correct:
+sum(as.matrix(pc_table))
+```
+
+```{r IDK_every_node}
+# get necessary variables: ----
+# define summary statistics:
+x_summary <- summary(heart.fft)
+x_level_stats <- heart.fft$trees$level_stats$train
+
+# number of cases:
+n <- x_summary$stats$train$n[1]
+
+# number of hits, false alarms, misses and correct rejections per level in pc:
+# level 1:
+HIT_1 <- x_level_stats$hi[1]
+HIT_1_pc <- (HIT_1/ n)
+FA_1 <- x_level_stats$fa[1]
+FA_1_pc <- (FA_1/ n)
+MI_1 <- x_level_stats$mi[1]
+MI_1_pc <- (MI_1/ n)
+CR_1 <- x_level_stats$cr[1]
+CR_1_pc <- (CR_1/ n)
+
+# calculate new n:
+n_after_1 <- n - sum(HIT_1, FA_1, MI_1, CR_1)
+
+# level 2:
+HIT_2 <- x_level_stats$hi[2] - x_level_stats$hi[1]
+HIT_2_pc <- (HIT_2/ n_after_1)
+FA_2 <- x_level_stats$fa[2] - x_level_stats$fa[1]
+FA_2_pc <- (FA_2/ n_after_1)
+MI_2 <- x_level_stats$mi[2] - x_level_stats$mi[1]
+MI_2_pc <- (MI_2/ n_after_1)
+CR_2 <- x_level_stats$cr[2] - x_level_stats$cr[1]
+CR_2_pc <- (CR_2/ n_after_1)
+
+# calculate new n:
+n_after_2 <- n_after_1 - sum(HIT_2, FA_2, MI_2, CR_2)
+
+# level 3:
+HIT_3 <- x_level_stats$hi[3] - (x_level_stats$hi[1] + (x_level_stats$hi[2]-x_level_stats$hi[1]))
+HIT_3_pc <- (HIT_3/ n_after_2)
+FA_3 <- x_level_stats$fa[3] - (x_level_stats$fa[1] + (x_level_stats$fa[2]-x_level_stats$fa[1]))
+FA_3_pc <- (FA_3/ n_after_2)
+MI_3 <- x_level_stats$mi[3] - (x_level_stats$mi[1] + (x_level_stats$mi[2]-x_level_stats$mi[1]))
+MI_3_pc <- (MI_3/ n_after_2)
+CR_3 <- x_level_stats$cr[3] - (x_level_stats$cr[1] + (x_level_stats$cr[2]-x_level_stats$cr[1]))
+CR_3_pc <- (CR_3/ n_after_2)
+
+
+
+# define percentage that is missing in every variable of the data: ----
+pc <- 0.25 # for example
+
+
+# define the new values of hi, fa, mi, cr and IDK ----
+# In this case p% in each variable will be excluded directly since they are missings and cannot be classified:
+
+# first node:
+IDK_1 <- n * pc
+IDK_1_hi <- n * pc * HIT_1_pc
+IDK_1_fa <- n * pc * FA_1_pc
+IDK_1_mi <- n * pc * MI_1_pc
+IDK_1_cr <- n * pc * CR_1_pc
+IDK_1_unassigned <- IDK_1 - sum(IDK_1_hi, IDK_1_fa, IDK_1_mi, IDK_1_cr)
+
+# new hi, fa, mi, cr values without excluded missings:
+n1_pc_gone_only <- n - (n * pc)
+hit_1 <- HIT_1_pc * n1_pc_gone_only
+fa_1 <- FA_1_pc * n1_pc_gone_only
+mi_1 <- MI_1_pc * n1_pc_gone_only
+cr_1 <- CR_1_pc * n1_pc_gone_only
+
+
+# second node:
+n1 <- n1_pc_gone_only -(sum(hit_1, fa_1, mi_1, cr_1))
+IDK_2<- n1 * pc
+IDK_2_hi <- n1 * pc * HIT_2_pc
+IDK_2_fa <- n1 * pc * FA_2_pc
+IDK_2_mi <- n1 * pc * MI_2_pc
+IDK_2_cr <- n1 * pc * CR_2_pc
+IDK_2_unassigned <- IDK_2 -sum(IDK_2_hi, IDK_2_fa, IDK_2_mi, IDK_2_cr)
+
+
+# new hi, fa, mi, cr values without excluded missings:
+n2_pc_gone_only <- n1 - (n1 * pc)
+hit_2 <- HIT_2_pc * n2_pc_gone_only
+fa_2 <- FA_2_pc * n2_pc_gone_only
+mi_2 <- MI_2_pc * n2_pc_gone_only
+cr_2 <- CR_2_pc * n2_pc_gone_only
+
+# third node:
+n2 <- n2_pc_gone_only -(sum(hit_2, fa_2, mi_2, cr_2))
+IDK_3<- n2 * pc
+IDK_3_hi <- n2 * pc * HIT_3_pc
+IDK_3_fa <- n2 * pc * FA_3_pc
+IDK_3_mi <- n2 * pc * MI_3_pc
+IDK_3_cr <- n2 * pc * CR_3_pc
+
+# new hi, fa, mi, cr values without excluded missings:
+n3 <- n2 - (n2 * pc)
+hit_3 <- HIT_3_pc * n3
+fa_3 <- FA_3_pc * n3
+mi_3 <- MI_3_pc * n3
+cr_3 <- CR_3_pc * n3
+
+
+# build table with new performance data: ----
+
+# Define the values for each cell:
+hit <- sum(hit_1, hit_2, hit_3)
+IDK_hit <- sum(IDK_1_hi, IDK_2_hi, IDK_3_hi)
+IDK_mi <- sum(IDK_1_mi, IDK_2_mi, IDK_3_mi)
+mi <- sum(mi_1, mi_2, mi_3)
+fa <- sum(fa_1, fa_2, fa_3)
+IDK_fa <- sum(IDK_1_fa, IDK_2_fa, IDK_3_fa)
+IDK_cr <- sum(IDK_1_cr, IDK_2_cr, IDK_3_cr)
+cr <- sum(cr_1, cr_2, cr_3)
+
+IDK_else_unassigned <- sum(IDK_1, IDK_2, IDK_3) - sum(IDK_hit, IDK_mi, IDK_fa, IDK_cr)
+
+# collect in vector:
+values <- c(hit, IDK_hit, IDK_mi, mi, fa, IDK_fa, IDK_cr, cr, 0, IDK_else_unassigned, 0, 0)
+
+# Define the column and row names:
+col_names <- c("TRUE (reality)", "FALSE (reality)", "IDK_else_unassigned")
+row_names <- c("TRUE (decision)", "IDK_TRUE (decision)", "IDK_FALSE (decision)", "FALSE (decision)")
+
+# Create a matrix with the values:
+matrix_values <- matrix(values, nrow = length(row_names), ncol = length(col_names))
+
+# Create a data frame:
+table <- data.frame(matrix_values, row.names = row_names)
+
+# Rename the columns:
+colnames(table) <- col_names
+
+# Print the table:
+print(table)
+
+# check whether sum is correct:
+sum(as.matrix(table))
+
+
+# Calculate the percentages:----
+# Define the multiplication factor:
+factor <- 100
+
+# Multiply each cell by the factor and divide by n
+pc_table <- table %>%
+  mutate(across(everything(), ~ (. * factor) / n))
+
+# new column names:
+col_names <- c("TRUE (reality) %", "FALSE (reality) %", "IDK_else_unassigned %")
+
+# Rename the columns:
+colnames(pc_table) <- col_names
+
+# Print the new data frame
+print(pc_table)
+
+# check whether sum is correct:
+sum(as.matrix(pc_table))
+
+```
+
+# Define Loop functions (for multiple simulations) ----
+
+```{r replace_values}
+replace_values <- function(data, cols, amount, replacement = NA, levels_amount = NULL) {
+
+
+  # Verify inputs ----
+  testthat::expect_true(is.data.frame(data), info = "Data should be a dataframe.") # check that data is a data frame.
+  testthat::expect_true(all(cols %in% names(data)), info = "All column names should be present in the data.") # check that columns is/are all variables in the data frame.
+  testthat::expect_true(length(cols) == length(amount), info = "Number of columns and percentages have to match.") # check if columns and percentages are of the same length.
+  testthat::expect_true(all(is.numeric(amount) & (amount >= 0) ), info = "All amounts should be numeric values.") # check that percentages are all numbers between 0 and 1, or higher (than treat as number of to be replaced values.
+  testthat::expect_true(is.character(replacement) | is.numeric(replacement) | is.logical(replacement) | is.na(replacement), info = "Replacement value should be of a valid data type (character, nummeric, logical or NA).") # check that replacement is a valid data type.
+  testthat::expect_true(is.null(levels_amount) | is.list(levels_amount), info = "levels_amount should be a list") # check that levels_amount is a list if it's not NULL.
+  if (!is.null(levels_amount)) {
+    testthat::expect_true(all(names(levels_amount) %in% cols), info = "All names in levels_amount have to correspond to a column in the data.") # check if all elements in levels_amount correspond to a column in the data frame.
+    for (col in names(levels_amount)) {
+      if (is.factor(data[[col]])) {
+        testthat::expect_true(all(names(levels_amount[[col]]) %in% levels(data[[col]])), info = "All levels in levels_amount have to be present in the corresponding column of the data.") # check if all sub-elements in each element are valid levels in the corresponding factor variable.
+
+         }
+
+      else if (is.character(data[[col]])) {
+        testthat::expect_true(all(names(levels_amount[[col]]) %in% unique(data[[col]])), info = "All levels in levels_amount have to be present in the corresponding column of the data.")
+
+         }
+
+     }
+
+  }
+  # main: ----
+
+  # loop function over all columns that are inserted in form of a vector and corresponding percentages:
+  for (i in seq_along(cols)) {
+
+    col <- cols[i]
+    perc <- amount[i]
+
+
+    # Check if the specific column is a factor and has levels_amount defined:
+    if (is.factor(data[[col]]) || is.character(data[[col]]) && !is.null(levels_amount) && col %in% names(levels_amount)) {
+
+      # if all these conditions apply for the column, code is executed:
+      # get list of different replacement percentages of levels in column:
+      lev_amount <- levels_amount[[col]]
+
+      # loop over levels in current column:
+      for (cat in names(lev_amount)) {
+
+        # get replacement percentage for current category:
+        replace_perc <- lev_amount[[cat]]
+
+        # get rows in column for current category:
+        rows <- which(data[[col]] == cat)
+
+        # Calculate how many values should be replaced in category:
+        num_replace <-  ifelse(replace_perc <= 1, round(replace_perc * length(rows), 0), replace_perc)
+
+        # Use sample to replace specified percentage of category with replacement input:
+        replace_rows <- sample(rows, size = num_replace[1],  replace = FALSE)
+        data[replace_rows, col] <- replacement
+
+      }
+
+    } else {
+
+      # Calculate how many values should be replaced:
+      num_values <- nrow(data)
+      num_replace <-  ifelse(amount <= 1, round(amount * num_values, 0), amount)
+
+      # Use sample to replace specified percentage with replacement input:
+      replace_rows <- sample(1:num_values,size = num_replace[1],  replace = FALSE)
+      data[replace_rows, col] <- replacement
+
+    }
+
+  }
+
+  # Output: ----
+
+  return(data) # as data frame.
+
+} # replace_values().
+
+```
+
+```{r define-loop-NA-function}
+
+loop_NA <- function(data, criterion, pc, x, fft_df, x_stats_1){
+
+
+# Prepare for loop:
+  # Parameters:
+  n_per_NA <- 10
+  n_sims <- n_per_NA
+
+# initialize data structure to collect results:
+results <- data.frame(matrix(NA, nrow = 1 + n_sims, ncol = 26))
+
+# results:
+n_col <- ncol(x_stats_1)
+results[1, 1:n_col] <- x_stats_1
+
+  
+# Prepare vectors as input for replace_values function:  
+   # get all names of variables but exclude criterion: 
+   col_names <- names(data)
+   col_names <- col_names[col_names != criterion ]
+  
+   # build vector with NA percentage: 
+   num_cols <- length(col_names)
+   pc_per_row <- pc
+
+   # create vector with that pc for number of rows:
+   pc_vec <- rep(pc_per_row, times = num_cols)
+
+   # set seed for reproducability:
+   set.seed(13)
+  
+# Loop 1: ---- 
+for (i in 1:n_sims){
+
+# Add NAs to data:
+data_NA <- replace_values(data = data, 
+                          cols = col_names, 
+                          amount = pc_vec, 
+                          replacement = NA, 
+                          levels_amount = NULL)
+
+  
+# Apply tree definition to (OLD/NBW) data:
+y <- FFTrees(object = x,
+             tree.definitions = fft_df,
+             data = data_NA, 
+             quiet = TRUE, 
+             do.comp = FALSE)
+
+# Collect results:
+
+# a) tree performance: 
+y_summary <- summary(y)
+y_stats <- y_summary$stats$train
+
+# b) level stats:
+y_level_stats <- y$trees$level_stats$train
+NA_stats <- y_level_stats[nrow(y_level_stats) , c(25 :30)]
+
+# Combine:
+all_data_df <- cbind(y_stats, NA_stats)
+# dim(all_data_df)
+
+
+# Collect results:
+results[(1 + i), ] <- all_data_df
+
+} # for loop. 
+
+  
+# After loop:
+
+# Add column names to data frame:
+names(results) <- names(all_data_df)
+
+       
+# Output: ----
+return(results) # as data frame.
+
+} # loop_NA().
+```
+
+```{r define-loop-pc-function}
+
+# as input a vector with different pcs for which you want data:
+
+loop_pc <- function(data, data_name, criterion, several_pcs, x, fft_df, x_stats_1){
+
+  # Initialize list to store results:
+  results_dataframes <-  list()
+
+  # length of vector, to know when to stop:
+  n <- length(several_pcs)
+
+  # Loop 2:
+  for (j in 1:n) {
+
+    # use function loop_NA and give name to each data frame:
+    result_name <- paste0(data_name, "_", several_pcs[j]*100, "pc")
+    results_dataframes[[result_name]] <- loop_NA(data, criterion, several_pcs[j], x, fft_df, x_stats_1)
+
+  } # for loop.
+  
+  # Output: ----
+  
+  return(results_dataframes)# as list.
+
+} # loop_pc.
+
+```
+
+```{r define-loop-datasets-function}
+
+# as input a vector with different data sets for which you want data:
+
+loop_datasets <- function(several_data, data_names, several_criterion, several_pcs){
+
+  # Preparations:
+  # length of vector, to know when to stop:
+  n <- length(several_data)
+
+
+  # Initialize list to store results:
+  results_list_dataframes <-  list()
+  
+  # Initialize list to store results of Baseline-pc:
+  baseline_pc <- numeric(n)
+
+  
+  # Initialize two nummeric vectors to store results of Baseline-pc:
+  bl <- numeric(n)
+  pred_benchmark <- numeric(n)
+  
+  # Loop 3:
+  for (k in 1:n) {
+
+    # build tree with original data for each dataset:
+    # get name of data set:
+    name <- data_names[k]
+
+    #Build tree for normal data set:
+    x <- FFTrees(formula = as.formula(paste(several_criterion[k],"~.")),
+                 data = several_data[[k]],
+                 main = name,
+                 goal = "bacc",
+                 goal.chase = "bacc",
+                 goal.threshold = "bacc")
+
+    # Performance:
+    x_summary <- summary(x)
+    x_stats_1 <- x_summary$stats$train[1, ]
+
+    # get tree definitions:
+    x_fft_df <- get_fft_df(x)
+    fft_df <- x_fft_df[1, ]  # best training tree
+
+
+
+    # use function loop_pc:
+    results_list_dataframes[[data_names[k]]] <- loop_pc(several_data[[k]], data_names[k], several_criterion[k], several_pcs, x, fft_df, x_stats_1)
+
+    
+    
+    # describe data for further table:
+    dd <- describe_data(several_data[[k]], 
+                    data_name = name, 
+                    criterion_name = several_criterion[k], 
+                    baseline_value = TRUE)
+
+    # Baseline:
+    bl[k] <- dd$Baseline_pct
+
+    # Minimum prediction performance (i.e., majority of criterion):
+    pred_benchmark[k] <- max(bl[k], 100 - bl[k])/100
+    
+    # store baseline_pc:
+    baseline_pc[k] <- pred_benchmark[k]
+
+    
+  } # for loop.
+  
+  # Output: ----
+  
+  return(list(results = results_list_dataframes, baseline = baseline_pc)) # as list.
+
+} # loop_datasets.
+```
+
+
+
+# Use function for example 25%: ----
+
+```{r run-simulation}
+
+dfs <- loop_datasets(several_data = list(heartdisease),
+                      data_names = c("heartdisease"), 
+                      several_criterion = c("diagnosis"),
+                      several_pcs = c(0.25))
+
+
+# assign names to output dfs:
+heart_NA_25 <- dfs$results$heartdisease[["heartdisease_25pc"]]
+```
+
+Collect key results (in df): ----
+
+```{r key-results}
+key_results <- data.frame(matrix(NA, nrow = 2, ncol = 5))
+names(key_results) <- c("pc_NA", "mn_hi", "mn_fa", "mn_mi", "mn_cr")
+
+
+# Row 1: mean values:
+key_results[1, "pc_NA"]   <- 25
+key_results[1, "mn_hi"]  <- mean(heart_NA_25$hi[-1])
+key_results[1, "mn_fa"] <- mean(heart_NA_25$fa[-1])
+key_results[1, "mn_mi"]  <- mean(heart_NA_25$mi[-1])
+key_results[1, "mn_cr"]  <- mean(heart_NA_25$cr[-1])
+
+
+# Row : in pc:
+key_results[2, "pc_NA"]   <- 25
+key_results[2, "mn_hi"]  <- mean(heart_NA_25$hi[-1])/n*100
+key_results[2, "mn_fa"] <- mean(heart_NA_25$fa[-1])/n*100
+key_results[2, "mn_mi"]  <- mean(heart_NA_25$mi[-1])/n*100
+key_results[2, "mn_cr"]  <- mean(heart_NA_25$cr[-1])/n*100
+
+
+key_results
+```
