@@ -1,5 +1,6 @@
-# load package:
+# load packages:
 require(FFTrees)
+library(dplyr)
 
 
 # build example tree with heartdisease: ----
@@ -42,7 +43,7 @@ pc <- 0.25 # for example
 # In this variant all data with missings is passed on to the next node and processed there.
 # Only missings in all variables (which are used for the FFTree) are then put in category IDK.
 
-# number of that category:
+# number of missings in all categories:
 p <- pc^nodes
 p
 
@@ -81,3 +82,60 @@ print(table)
 
 # check whether sum is correct:
 sum(as.matrix(table))
+
+
+
+# Calculate the percentages:----
+
+
+# Define the multiplication factor:
+factor <- 100
+
+# Multiply each cell by the factor and divide by n
+pc_table <- table %>%
+  mutate(across(everything(), ~ (. * factor) / n))
+
+# Print the new data frame
+print(pc_table)
+
+
+
+# check whether sum is correct:
+sum(as.matrix(pc_table))
+
+
+
+# FOR COMPARISON, old performance: ----
+
+# collect values in vector:
+values_o <- c(HIT, MI, FA, CR)
+
+# Define the column and row names:
+col_names_o <- c("TRUE (reality)", "FALSE (reality)")
+row_names_o <- c("TRUE (decision)", "FALSE (decision)")
+
+# Create a matrix with the values:
+matrix_values_o <- matrix(values_o, nrow = length(row_names_o), ncol = length(col_names_o))
+
+# Create a data frame:
+origional_table <-  data.frame(matrix_values_o, row.names = row_names_o)
+
+# Rename the columns:
+colnames(origional_table) <- col_names
+
+# Print the original table:
+print(origional_table)
+
+# old performance in pc: ----
+
+# Multiply each cell by the factor and divide by n
+pc_original_table <- origional_table %>%
+  mutate(across(everything(), ~ (. * factor) / n))
+
+# Print the new data frame
+print(pc_original_table)
+
+
+# check whether sum is correct:
+sum(as.matrix(pc_original_table))
+
