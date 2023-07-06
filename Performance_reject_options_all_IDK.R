@@ -161,3 +161,22 @@ sum(as.matrix(table))
 
 
 
+
+# Calculate the percentages:----
+
+
+# Define the multiplication factor:
+factor <- 100
+
+# Multiply each cell by the factor and divide by n
+pc_table <- table %>%
+  mutate(across(everything(), ~ (. * factor) / n))
+
+# Print the new data frame
+print(pc_table)
+
+
+
+# check whether sum is correct:
+sum(as.matrix(pc_table))
+
