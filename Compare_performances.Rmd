@@ -61,14 +61,9 @@ colnames(original_table) <- col_names_o
 print(original_table)
 
 # old performance in pc: ----
-
-# Define the multiplication factor:
-factor <- 100
-
-# Multiply each cell by the factor and divide by n:
+# Divide each cell by n:
 pc_original_table <- original_table %>%
-  mutate(across(everything(), ~ (. * factor) / n))
-
+  mutate_all(~ . / n)
 
 # new column names:
 col_names_o <- c("TRUE (reality) %", "FALSE (reality) %")
@@ -78,6 +73,26 @@ colnames(pc_original_table) <- col_names_o
 
 # Print the new data frame:
 print(pc_original_table)
+
+
+# calculating costs: ----
+
+# Variables needed: 
+# costs could e.g. be:
+cost_hi <- 1
+cost_mi <- -1
+cost_fa <- cost_mi
+cost_cr <- cost_hi
+
+# probabilities taken from the table above:
+original_costs <- pc_original_table$`TRUE (reality) %`[1] * cost_hi +
+                  pc_original_table$`TRUE (reality) %`[2] * cost_mi +
+                  pc_original_table$`FALSE (reality) %`[1] * cost_fa +
+                  pc_original_table$`FALSE (reality) %`[2] * cost_cr 
+      
+
+
+
 ```
 
 ```{r 1_IDK_last_node}
@@ -150,12 +165,9 @@ sum(as.matrix(table))
 
 
 # Calculate the percentages:----
-# Define the multiplication factor:
-factor <- 100
-
-# Multiply each cell by the factor and divide by n:
+# Divide each cell by n:
 pc_table <- table %>%
-  mutate(across(everything(), ~ (. * factor) / n))
+  mutate_all(~ . / n)
 
 # new column names:
 col_names <- c("TRUE (reality) %", "FALSE (reality) %")
@@ -168,6 +180,29 @@ print(pc_table)
 
 # check whether sum is correct:
 sum(as.matrix(pc_table))
+
+# calculating costs: ----
+
+# Variables needed: 
+# costs could e.g. be:
+cost_hi <- 1
+cost_IDK_hi <- 0
+cost_IDK_mi <- cost_IDK_hi
+cost_mi <- -1
+cost_fa <- cost_mi
+cost_IDK_fa <- cost_IDK_hi
+cost_IDK_cr <- cost_IDK_hi
+cost_cr <- cost_hi
+
+# probabilities taken from the table above:
+IDK_1_costs <- pc_table$`TRUE (reality) %`[1] * cost_hi +
+               pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
+               pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
+               pc_table$`TRUE (reality) %`[4] * cost_mi +
+               pc_table$`FALSE (reality) %`[1] * cost_fa +
+               pc_table$`FALSE (reality) %`[2] * cost_IDK_fa +
+               pc_table$`FALSE (reality) %`[3] * cost_IDK_cr +
+               pc_table$`FALSE (reality) %`[4] * cost_cr 
 ```
 
 ```{r IDK_every_node}
@@ -313,11 +348,9 @@ sum(as.matrix(table))
 
 # Calculate the percentages:----
 # Define the multiplication factor:
-factor <- 100
-
-# Multiply each cell by the factor and divide by n
+# Divide each cell by n:
 pc_table <- table %>%
-  mutate(across(everything(), ~ (. * factor) / n))
+   mutate_all(~ . / n)
 
 # new column names:
 col_names <- c("TRUE (reality) %", "FALSE (reality) %", "IDK_else_unassigned %")
@@ -331,11 +364,38 @@ print(pc_table)
 # check whether sum is correct:
 sum(as.matrix(pc_table))
 
+# calculating costs: ----
+
+# Variables needed: 
+# costs could e.g. be:
+cost_hi <- 1
+cost_IDK_hi <- 0
+cost_IDK_mi <- cost_IDK_hi
+cost_mi <- -1
+cost_fa <- cost_mi
+cost_IDK_fa <- cost_IDK_hi
+cost_IDK_cr <- cost_IDK_hi
+cost_cr <- cost_hi
+cost_unassigned <- cost_IDK_hi
+
+# probabilities taken from the table above:
+IDK_all_costs <- pc_table$`TRUE (reality) %`[1] * cost_hi +
+               pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
+               pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
+               pc_table$`TRUE (reality) %`[4] * cost_mi +
+               pc_table$`FALSE (reality) %`[1] * cost_fa +
+               pc_table$`FALSE (reality) %`[2] * cost_IDK_fa +
+               pc_table$`FALSE (reality) %`[3] * cost_IDK_cr +
+               pc_table$`FALSE (reality) %`[4] * cost_cr 
+               pc_table$`IDK_else_unassigned %`[2] * cost_unassigned
+
 ```
 
-# Define Loop functions (for multiple simulations) ----
 
-```{r replace_values}
+
+
+```{r  Define_functions_replace_values}
+# Define Loop functions (for multiple simulations) ----
 replace_values <- function(data, cols, amount, replacement = NA, levels_amount = NULL) {
 
 
@@ -608,11 +668,8 @@ loop_datasets <- function(several_data, data_names, several_criterion, several_p
 } # loop_datasets.
 ```
 
-
-
-# Use function for example 25%: ----
-
 ```{r run-simulation}
+# Use function for example 25%: ----
 
 dfs <- loop_datasets(several_data = list(heartdisease),
                       data_names = c("heartdisease"), 
@@ -624,9 +681,9 @@ dfs <- loop_datasets(several_data = list(heartdisease),
 heart_NA_25 <- dfs$results$heartdisease[["heartdisease_25pc"]]
 ```
 
-Collect key results (in df): ----
-
 ```{r key-results}
+
+# Collect key results (in df): ----
 key_results <- data.frame(matrix(NA, nrow = 2, ncol = 5))
 names(key_results) <- c("pc_NA", "mn_hi", "mn_fa", "mn_mi", "mn_cr")
 
@@ -641,11 +698,54 @@ key_results[1, "mn_cr"]  <- mean(heart_NA_25$cr[-1])
 
 # Row : in pc:
 key_results[2, "pc_NA"]   <- 25
-key_results[2, "mn_hi"]  <- mean(heart_NA_25$hi[-1])/n*100
-key_results[2, "mn_fa"] <- mean(heart_NA_25$fa[-1])/n*100
-key_results[2, "mn_mi"]  <- mean(heart_NA_25$mi[-1])/n*100
-key_results[2, "mn_cr"]  <- mean(heart_NA_25$cr[-1])/n*100
+key_results[2, "mn_hi"]  <- mean(heart_NA_25$hi[-1])/n
+key_results[2, "mn_fa"] <- mean(heart_NA_25$fa[-1])/n
+key_results[2, "mn_mi"]  <- mean(heart_NA_25$mi[-1])/n
+key_results[2, "mn_cr"]  <- mean(heart_NA_25$cr[-1])/n
 
 
 key_results
 ```
+
+```{r calculate_costs}
+
+# Variables needed: 
+# costs could e.g. be:
+cost_hi <- 1
+cost_mi <- -1
+cost_fa <- cost_mi
+cost_cr <- cost_hi
+
+# probabilities taken from the table above:
+handle_NA_costs <- key_results$mn_hi[2] * cost_hi +
+                  key_results$mn_mi[2] * cost_mi +
+                  key_results$mn_fa[2] * cost_fa +
+                  key_results$mn_cr[2] * cost_cr 
+```
+
+
+
+```{r Compare_costs_across_proceedings}
+
+# Compare performances with costs: ----
+# Define the column names and values
+col_names <- c("original_costs", "IDK_1_costs", "IDK_all_costs", "handle_NA_costs")
+values <- as.numeric(c(original_costs, IDK_1_costs, IDK_all_costs, handle_NA_costs))
+
+# Create the data frame
+df <- data.frame(t(values))
+colnames(df) <- col_names
+
+# Print the data frame
+print(df)
+
+str(df)
+
+```
+
+```{r display_costs_in_barplot}
+
+# Create  bar plot: ----
+barplot(height = values, names = col_names, ylim = c(0, 1), xlab = "procedure", ylab = "Costs", main = "Costs of different procedures to handle missings.")
+```
+
