@@ -595,7 +595,8 @@ key_results_normalized_mean
 
 
 
-Plot mean results (all used data sets):
+
+# Plot mean results (all used data sets): ----
 
 ```{r plot-key-results_normalized}
 # Upper benchmark: Best FFT without missing data: 
@@ -618,7 +619,7 @@ lines(x = key_results_normalized_mean$pc_NA,
       # xlab = "Percent NA values", 
       # ylab = "Mean accuracy"
 )
-title(main = "Mean accuracy given missing values - heartdisease data")
+title(main = "Mean accuracy given missing values - all data")
 ```
 
 2. Frugality (mean `mcu`)
