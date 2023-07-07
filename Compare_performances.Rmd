@@ -590,6 +590,18 @@ key_results[2, "mn_cr"] <- mean(get(input_var)$cr[-1]) / n
 key_results
 ```
 
+
+```{r calculate_costs}
+
+# probabilities taken from the table above:
+ handle_NA_costs <- key_results$mn_hi[2] * cost_hi +
+                    key_results$mn_mi[2] * cost_mi +
+                    key_results$mn_fa[2] * cost_fa +
+                    key_results$mn_cr[2] * cost_cr 
+```
+
+
+
 # Compare different proceedings: ----
 ```{r Compare_costs_across_proceedings}
 
