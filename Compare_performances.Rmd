@@ -14,7 +14,7 @@ library(dplyr)
 # Variables needed: 
 # costs could e.g. be:
 cost_hi <- 1
-cost_IDK_hi <- -0.5
+cost_IDK_hi <- -0
 cost_IDK_mi <- cost_IDK_hi
 cost_mi <- -1
 cost_fa <- cost_mi
@@ -24,7 +24,7 @@ cost_cr <- cost_hi
 cost_unassigned <- cost_IDK_hi
 
 
-# define percentage that is missing in every variable of the data: ----
+# define percentage that is missing in every variable of the data: 
 pc <- 0.25 # for example
 ```
 
@@ -372,7 +372,7 @@ IDK_all_costs <- pc_table$`TRUE (reality) %`[1] * cost_hi +
 
 
 
-
+# Define some functions: ----
 ```{r  Define_functions_replace_values}
 # Define Loop functions (for multiple simulations) ----
 replace_values <- function(data, cols, amount, replacement = NA, levels_amount = NULL) {
@@ -647,6 +647,7 @@ loop_datasets <- function(several_data, data_names, several_criterion, several_p
 } # loop_datasets.
 ```
 
+# Handle NA with FFTrees: ----
 ```{r run-simulation}
 # Use function for example 25%: ----
 
@@ -708,7 +709,7 @@ key_results[2, "mn_cr"] <- mean(get(input_var)$cr[-1]) / n
 key_results
 ```
 
-
+# Compare different proceedings: ----
 ```{r Compare_costs_across_proceedings}
 
 # Compare performances with costs: ----
