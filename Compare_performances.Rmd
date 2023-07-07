@@ -14,7 +14,7 @@ library(dplyr)
 # Variables needed: 
 # costs could e.g. be:
 cost_hi <- 1
-cost_IDK_hi <- -0
+cost_IDK_hi <- 0
 cost_IDK_mi <- cost_IDK_hi
 cost_mi <- -1
 cost_fa <- cost_mi
@@ -27,6 +27,7 @@ cost_cr <- cost_hi
 pc <- 0.25 # for example
 ```
 
+
 ```{r baseline}
 # build example tree with heartdisease: ----
 heart.fft <- FFTrees(formula = diagnosis ~ .,
@@ -36,12 +37,10 @@ heart.fft <- FFTrees(formula = diagnosis ~ .,
 # plot results:
 plot(heart.fft)
 
+# define variables for further use:
 # define summary statistic:
 x_summary <- summary(heart.fft)
 
-# FOR COMPARISON, old performance: ----
-
-# important variables:
 # number of cases:
 n <- x_summary$stats$train$n[1]
 
@@ -56,6 +55,12 @@ MI <- x_summary$stats$train$mi[1]
 
 # number of correct rejections:
 CR <- x_summary$stats$train$cr[1]
+
+# define number of nodes that are in the tree:
+nodes <- x_summary$definitions$nodes[1]
+
+
+# FOR COMPARISON, old performance: ----
 
 # Build table for overview: 
 # collect values in vector:
@@ -106,30 +111,7 @@ original_costs <- pc_original_table$`TRUE (reality) %`[1] * cost_hi +
 ```
 
 ```{r 1_IDK_last_node}
-# get necessary variables: ----
-# define summary statistic:
-x_summary <- summary(heart.fft)
-
-# number of cases:
-n <- x_summary$stats$train$n[1]
-
-# number of hits:
-HIT <- x_summary$stats$train$hi[1]
-
-# number of false alarms:
-FA <- x_summary$stats$train$fa[1]
-
-# number of misses:
-MI <- x_summary$stats$train$mi[1]
-
-# number of correct rejections:
-CR <- x_summary$stats$train$cr[1]
-
-# define number of nodes that are in the tree:
-nodes <- x_summary$definitions$nodes[1]
-
-
-# In this variant all data with missings is passed on to the next node and processed there.
+# In this variant all data with missings is passed on to the next node and processed there. ----
 # Only missings in all variables (which are used for the FFTree) are then put in category IDK.
 
 # number of missings in all categories:
@@ -201,46 +183,21 @@ IDK_1_costs <- pc_table$`TRUE (reality) %`[1] * cost_hi +
 ```
 
 ```{r IDK_every_node}
-# get necessary variables: ----
-# define summary statistic:
-x_summary <- summary(heart.fft)
-
-# number of cases:
-n <- x_summary$stats$train$n[1]
-
-# number of hits:
-HIT <- x_summary$stats$train$hi[1]
-
-# number of false alarms:
-FA <- x_summary$stats$train$fa[1]
-
-# number of misses:
-MI <- x_summary$stats$train$mi[1]
-
-# number of correct rejections:
-CR <- x_summary$stats$train$cr[1]
-
-# define number of nodes that are in the tree:
-nodes <- x_summary$definitions$nodes[1]
-
-
-# In this variant all data with missings is passed on to the next node and processed there.
-# Only missings in all variables (which are used for the FFTree) are then put in category IDK.
-
+# In this case p% in each variable will be excluded directly since they are missings and cannot be classified:----
 # number of missings in all categories:
-p <-  pc + (1-pc)*pc + (1-pc)*(1-pc)*pc
-p
+p_all <-  pc + (1-pc)*pc + (1-pc)*(1-pc)*pc
+p_all
 
 # build table with new performance data:
 # Define the values for each cell:
-hit <- HIT - (HIT * p)
-IDK_hit <- HIT * p
-IDK_mi <- MI * p
-mi <- MI - (MI * p)
-fa <- FA - (FA * p)
-IDK_fa <- FA * p
-IDK_cr <- CR * p
-cr <- CR - (CR * p)
+hit <- HIT - (HIT * p_all)
+IDK_hit <- HIT * p_all
+IDK_mi <- MI * p_all
+mi <- MI - (MI * p_all)
+fa <- FA - (FA * p_all)
+IDK_fa <- FA * p_all
+IDK_cr <- CR * p_all
+cr <- CR - (CR * p_all)
 
 # collect in vector:
 values <- c(hit, IDK_hit, IDK_mi, mi, fa, IDK_fa, IDK_cr, cr)
@@ -285,7 +242,7 @@ sum(as.matrix(pc_table))
 # calculating costs: ----
 
 # probabilities taken from the table above:
-IDK_1_costs <- pc_table$`TRUE (reality) %`[1] * cost_hi +
+IDK_all_costs <- pc_table$`TRUE (reality) %`[1] * cost_hi +
   pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
   pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
   pc_table$`TRUE (reality) %`[4] * cost_mi +
