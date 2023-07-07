@@ -10,7 +10,7 @@ require(FFTrees)
 library(dplyr)
 ```
 
-```{r define_costs}
+```{r define_costs_and_pc_missing}
 # Variables needed: 
 # costs could e.g. be:
 cost_hi <- 1
@@ -22,6 +22,10 @@ cost_IDK_fa <- cost_IDK_hi
 cost_IDK_cr <- cost_IDK_hi
 cost_cr <- cost_hi
 cost_unassigned <- cost_IDK_hi
+
+
+# define percentage that is missing in every variable of the data: ----
+pc <- 0.25 # for example
 ```
 
 ```{r baseline}
@@ -124,10 +128,6 @@ CR <- x_summary$stats$train$cr[1]
 
 # define number of nodes that are in the tree:
 nodes <- x_summary$definitions$nodes[1]
-
-
-# define percentage that is missing in every variable of the data: ----
-pc <- 0.25 # for example
 
 
 # In this variant all data with missings is passed on to the next node and processed there.
@@ -246,11 +246,6 @@ MI_3 <- x_level_stats$mi[3] - (x_level_stats$mi[1] + (x_level_stats$mi[2]-x_leve
 MI_3_pc <- (MI_3/ n_after_2)
 CR_3 <- x_level_stats$cr[3] - (x_level_stats$cr[1] + (x_level_stats$cr[2]-x_level_stats$cr[1]))
 CR_3_pc <- (CR_3/ n_after_2)
-
-
-
-# define percentage that is missing in every variable of the data: ----
-pc <- 0.25 # for example
 
 
 # define the new values of hi, fa, mi, cr and IDK ----
@@ -658,11 +653,33 @@ loop_datasets <- function(several_data, data_names, several_criterion, several_p
 dfs <- loop_datasets(several_data = list(heartdisease),
                       data_names = c("heartdisease"), 
                       several_criterion = c("diagnosis"),
-                      several_pcs = c(0.25))
+                      several_pcs = c(pc))
 
 
-# assign names to output dfs:
-heart_NA_25 <- dfs$results$heartdisease[["heartdisease_25pc"]]
+# assign names to output dfs: ----
+# list of names
+names_list <- c("heartdisease")
+
+# list of percentages
+pc_100 <- pc * 100
+percent_list <- c(pc_100)
+
+# loop over names
+for (name in names_list) {
+  
+  # loop over percentages
+  for (percent in percent_list) {
+    
+    # create the name of the dataframe in dfs$results
+    df_name <- paste0(name, "_", percent, "pc")
+    
+    # create the name of the variable
+    var_name <- paste0(name, "_NA_", percent)
+    
+    # assign the dataframe to a new variable
+    assign(var_name, dfs$results[[name]][[df_name]])
+  }
+}
 ```
 
 ```{r key-results}
@@ -671,37 +688,25 @@ heart_NA_25 <- dfs$results$heartdisease[["heartdisease_25pc"]]
 key_results <- data.frame(matrix(NA, nrow = 2, ncol = 5))
 names(key_results) <- c("pc_NA", "mn_hi", "mn_fa", "mn_mi", "mn_cr")
 
+# Construct the variable name
+input_var <- paste0("heartdisease_NA_", pc_100)
 
-# Row 1: mean values:
-key_results[1, "pc_NA"]   <- 25
-key_results[1, "mn_hi"]  <- mean(heart_NA_25$hi[-1])
-key_results[1, "mn_fa"] <- mean(heart_NA_25$fa[-1])
-key_results[1, "mn_mi"]  <- mean(heart_NA_25$mi[-1])
-key_results[1, "mn_cr"]  <- mean(heart_NA_25$cr[-1])
+# Row 1: mean values
+key_results[1, "pc_NA"] <- pc_100
+key_results[1, "mn_hi"] <- mean(get(input_var)$hi[-1])
+key_results[1, "mn_fa"] <- mean(get(input_var)$fa[-1])
+key_results[1, "mn_mi"] <- mean(get(input_var)$mi[-1])
+key_results[1, "mn_cr"] <- mean(get(input_var)$cr[-1])
 
-
-# Row : in pc:
-key_results[2, "pc_NA"]   <- 25
-key_results[2, "mn_hi"]  <- mean(heart_NA_25$hi[-1])/n
-key_results[2, "mn_fa"] <- mean(heart_NA_25$fa[-1])/n
-key_results[2, "mn_mi"]  <- mean(heart_NA_25$mi[-1])/n
-key_results[2, "mn_cr"]  <- mean(heart_NA_25$cr[-1])/n
-
+# Row 2: in pc
+key_results[2, "pc_NA"] <- pc_100
+key_results[2, "mn_hi"] <- mean(get(input_var)$hi[-1]) / n
+key_results[2, "mn_fa"] <- mean(get(input_var)$fa[-1]) / n
+key_results[2, "mn_mi"] <- mean(get(input_var)$mi[-1]) / n
+key_results[2, "mn_cr"] <- mean(get(input_var)$cr[-1]) / n
 
 key_results
 ```
-
-```{r calculate_costs}
-
-# Variables needed: 
-
-# probabilities taken from the table above:
-handle_NA_costs <- key_results$mn_hi[2] * cost_hi +
-                  key_results$mn_mi[2] * cost_mi +
-                  key_results$mn_fa[2] * cost_fa +
-                  key_results$mn_cr[2] * cost_cr 
-```
-
 
 
 ```{r Compare_costs_across_proceedings}
