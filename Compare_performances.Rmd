@@ -10,6 +10,20 @@ require(FFTrees)
 library(dplyr)
 ```
 
+```{r define_costs}
+# Variables needed: 
+# costs could e.g. be:
+cost_hi <- 1
+cost_IDK_hi <- -0.5
+cost_IDK_mi <- cost_IDK_hi
+cost_mi <- -1
+cost_fa <- cost_mi
+cost_IDK_fa <- cost_IDK_hi
+cost_IDK_cr <- cost_IDK_hi
+cost_cr <- cost_hi
+cost_unassigned <- cost_IDK_hi
+```
+
 ```{r baseline}
 # build example tree with heartdisease: ----
 heart.fft <- FFTrees(formula = diagnosis ~ .,
@@ -76,13 +90,6 @@ print(pc_original_table)
 
 
 # calculating costs: ----
-
-# Variables needed: 
-# costs could e.g. be:
-cost_hi <- 1
-cost_mi <- -1
-cost_fa <- cost_mi
-cost_cr <- cost_hi
 
 # probabilities taken from the table above:
 original_costs <- pc_original_table$`TRUE (reality) %`[1] * cost_hi +
@@ -182,17 +189,6 @@ print(pc_table)
 sum(as.matrix(pc_table))
 
 # calculating costs: ----
-
-# Variables needed: 
-# costs could e.g. be:
-cost_hi <- 1
-cost_IDK_hi <- 0
-cost_IDK_mi <- cost_IDK_hi
-cost_mi <- -1
-cost_fa <- cost_mi
-cost_IDK_fa <- cost_IDK_hi
-cost_IDK_cr <- cost_IDK_hi
-cost_cr <- cost_hi
 
 # probabilities taken from the table above:
 IDK_1_costs <- pc_table$`TRUE (reality) %`[1] * cost_hi +
@@ -365,18 +361,6 @@ print(pc_table)
 sum(as.matrix(pc_table))
 
 # calculating costs: ----
-
-# Variables needed: 
-# costs could e.g. be:
-cost_hi <- 1
-cost_IDK_hi <- 0
-cost_IDK_mi <- cost_IDK_hi
-cost_mi <- -1
-cost_fa <- cost_mi
-cost_IDK_fa <- cost_IDK_hi
-cost_IDK_cr <- cost_IDK_hi
-cost_cr <- cost_hi
-cost_unassigned <- cost_IDK_hi
 
 # probabilities taken from the table above:
 IDK_all_costs <- pc_table$`TRUE (reality) %`[1] * cost_hi +
@@ -710,11 +694,6 @@ key_results
 ```{r calculate_costs}
 
 # Variables needed: 
-# costs could e.g. be:
-cost_hi <- 1
-cost_mi <- -1
-cost_fa <- cost_mi
-cost_cr <- cost_hi
 
 # probabilities taken from the table above:
 handle_NA_costs <- key_results$mn_hi[2] * cost_hi +
@@ -738,14 +717,11 @@ colnames(df) <- col_names
 
 # Print the data frame
 print(df)
-
-str(df)
-
 ```
 
 ```{r display_costs_in_barplot}
 
 # Create  bar plot: ----
-barplot(height = values, names = col_names, ylim = c(0, 1), xlab = "procedure", ylab = "Costs", main = "Costs of different procedures to handle missings.")
+barplot(height = values, names = col_names, ylim = c(0, 1), xlab = "procedure", ylab = "Performance", main = "Costs of different procedures to handle missings.")
 ```
 
