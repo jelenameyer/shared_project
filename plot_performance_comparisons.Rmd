@@ -179,7 +179,7 @@ IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
                     key_results$mn_cr[2] * cost_cr 
 
 # Plot the graph with multiple y variables: ----
-plot(x, IDK_1, type = "l",ylim = c(0,1), col = "red", xlab = "relationship costs IDK vs fa/mi", ylab = "Performance")
+plot(x, IDK_1, type = "l",ylim = c(0,1), col = "red", xlab = "Costs of IDK", ylab = "Performance")
 lines(x, IDK_all, col = "green")
 abline(h=original,col="purple",lty=2)
 abline(h=FFT_handle,col="blue",lty=2)
@@ -370,7 +370,7 @@ IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
                     key_results$mn_cr[2] * cost_cr 
 
 # Plot the graph with multiple y variables: ----
-plot(x, IDK_1, type = "l",ylim = c(0,2), col = "red", xlab = "relationship costs IDK vs fa/mi", ylab = "Performance")
+plot(x, IDK_1, type = "l",ylim = c(0,2), col = "red", xlab = "Costs of IDK", ylab = "Performance")
 lines(x, IDK_all, col = "green")
 abline(h=original,col="purple",lty=2)
 abline(h=FFT_handle,col="blue",lty=2)
@@ -566,7 +566,7 @@ IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
                     key_results$mn_cr[2] * cost_cr 
 
 # Plot the graph with multiple y variables: ----
-plot(x, IDK_1, type = "l",ylim = c(0,4), col = "red", xlab = "relationship costs IDK vs fa/mi", ylab = "Performance")
+plot(x, IDK_1, type = "l",ylim = c(0,4), col = "red", xlab = "Costs of IDK", ylab = "Performance")
 lines(x, IDK_all, col = "green")
 abline(h=original,col="purple",lty=2)
 abline(h=FFT_handle,col="blue",lty=2)
