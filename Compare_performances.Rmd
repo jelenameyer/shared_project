@@ -210,46 +210,46 @@ row_names <- c("TRUE (decision)", "IDK_TRUE (decision)", "IDK_FALSE (decision)",
 matrix_values <- matrix(values, nrow = length(row_names), ncol = length(col_names))
 
 # Create a data frame:
-table <- data.frame(matrix_values, row.names = row_names)
+table_all <- data.frame(matrix_values, row.names = row_names)
 
 # Rename the columns:
-colnames(table) <- col_names
+colnames(table_all) <- col_names
 
-# Print the table:
-print(table)
+# Print the table_all:
+print(table_all)
 
 # check whether sum is correct:
-sum(as.matrix(table))
+sum(as.matrix(table_all))
 
 
 # Calculate the percentages:----
 # Divide each cell by n:
-pc_table <- table %>%
+pc_table_all <- table_all %>%
   mutate_all(~ . / n)
 
 # new column names:
 col_names <- c("TRUE (reality) %", "FALSE (reality) %")
 
 # Rename the columns:
-colnames(pc_table) <- col_names
+colnames(pc_table_all) <- col_names
 
 # Print the new data frame:
-print(pc_table)
+print(pc_table_all)
 
 # check whether sum is correct:
-sum(as.matrix(pc_table))
+sum(as.matrix(pc_table_all))
 
 # calculating costs: ----
 
-# probabilities taken from the table above:
-IDK_all_costs <- pc_table$`TRUE (reality) %`[1] * cost_hi +
-  pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
-  pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
-  pc_table$`TRUE (reality) %`[4] * cost_mi +
-  pc_table$`FALSE (reality) %`[1] * cost_fa +
-  pc_table$`FALSE (reality) %`[2] * cost_IDK_fa +
-  pc_table$`FALSE (reality) %`[3] * cost_IDK_cr +
-  pc_table$`FALSE (reality) %`[4] * cost_cr 
+# probabilities taken from the table_all above:
+IDK_all_costs <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
+  pc_table_all$`TRUE (reality) %`[2] * cost_IDK_hi +
+  pc_table_all$`TRUE (reality) %`[3] * cost_IDK_mi +
+  pc_table_all$`TRUE (reality) %`[4] * cost_mi +
+  pc_table_all$`FALSE (reality) %`[1] * cost_fa +
+  pc_table_all$`FALSE (reality) %`[2] * cost_IDK_fa +
+  pc_table_all$`FALSE (reality) %`[3] * cost_IDK_cr +
+  pc_table_all$`FALSE (reality) %`[4] * cost_cr 
 ```
 
 
