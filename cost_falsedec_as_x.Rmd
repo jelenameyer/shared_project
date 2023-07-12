@@ -1,0 +1,823 @@
+---
+title: "cost_falsedec_as_x"
+author: "JM and HN"
+date: "2023-07-12"
+output: html_document
+---
+
+# all for 25% missing data!!!
+
+# build table, cost of hi, cr = 1 and fa, mi = cost_hi * x, IDK = 0: ----
+```{r table-all-x-IDK-0}
+# Define x: ----
+x <- seq(-10, 0, length.out = 100)
+
+# Variables needed:----
+cost_IDK <- 0
+cost_hi <- -1
+cost_IDK_hi <- cost_IDK
+cost_IDK_mi <- cost_IDK
+cost_mi <- x * cost_hi
+cost_fa <- cost_mi
+cost_IDK_fa <- cost_IDK
+cost_IDK_cr <- cost_IDK
+cost_cr <- cost_hi
+
+# Calculate all y: ----
+# Calculate y1 for each x value:
+original <- pc_original_table$`TRUE (reality) %`[1] * cost_hi +
+      pc_original_table$`TRUE (reality) %`[2] * cost_mi +
+      pc_original_table$`FALSE (reality) %`[1] * cost_fa +
+      pc_original_table$`FALSE (reality) %`[2] * cost_cr
+
+# Calculate y2 for each x value (example calculation):
+IDK_1 <- pc_table$`TRUE (reality) %`[1] * cost_hi +
+               pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
+               pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
+               pc_table$`TRUE (reality) %`[4] * cost_mi +
+               pc_table$`FALSE (reality) %`[1] * cost_fa +
+               pc_table$`FALSE (reality) %`[2] * cost_IDK_fa +
+               pc_table$`FALSE (reality) %`[3] * cost_IDK_cr +
+               pc_table$`FALSE (reality) %`[4] * cost_cr 
+
+# Calculate y3 for each x value (example calculation):
+IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
+  pc_table_all$`TRUE (reality) %`[2] * cost_IDK_hi +
+  pc_table_all$`TRUE (reality) %`[3] * cost_IDK_mi +
+  pc_table_all$`TRUE (reality) %`[4] * cost_mi +
+  pc_table_all$`FALSE (reality) %`[1] * cost_fa +
+  pc_table_all$`FALSE (reality) %`[2] * cost_IDK_fa +
+  pc_table_all$`FALSE (reality) %`[3] * cost_IDK_cr +
+  pc_table_all$`FALSE (reality) %`[4] * cost_cr 
+
+# Calculate y4:
+ FFT_handle <- key_results$mn_hi[2] * cost_hi +
+                    key_results$mn_mi[2] * cost_mi +
+                    key_results$mn_fa[2] * cost_fa +
+                    key_results$mn_cr[2] * cost_cr 
+
+# Plot the graph with multiple y variables: ----
+plot(x, original, type = "l",ylim = c(-2,2), col = "red", xlab = "costs false decisions (x * correct decisions)", ylab = "Costs",
+main = "Total costs depending on the relationship from costs of false to correct decisions.")
+lines(x, IDK_1, col = "darkgreen")
+lines(x, IDK_all, col = "green")
+lines(x, FFT_handle, col = "orange")
+
+# Add a legend to the graph
+legend("bottomleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes", "FFT_handle_NAs"), col = c("red", "darkgreen", "green", "orange"), lty = 1)
+
+```
+
+
+# calculations ----
+
+```{r Intersection-original-1-IDk}
+# Define the two functions: ----
+original <-  function(x) pc_original_table$`TRUE (reality) %`[1] * cost_hi +
+      pc_original_table$`TRUE (reality) %`[2] *  x * cost_hi +
+      pc_original_table$`FALSE (reality) %`[1] *  x * cost_hi +
+      pc_original_table$`FALSE (reality) %`[2] * cost_cr
+
+
+one_IDK <- function(x)pc_table$`TRUE (reality) %`[1] * cost_hi +
+               pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
+               pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
+               pc_table$`TRUE (reality) %`[4] *  x * cost_hi +
+               pc_table$`FALSE (reality) %`[1] *  x * cost_hi +
+               pc_table$`FALSE (reality) %`[2] * cost_IDK_fa +
+               pc_table$`FALSE (reality) %`[3] * cost_IDK_cr +
+               pc_table$`FALSE (reality) %`[4] * cost_cr 
+    
+
+
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  one_IDK(x) - original(x), interval = c(-1000, 1000))
+intersection_point_IDK_1_original <- intersection$root
+
+# Print the intersection point:
+intersection_point_IDK_1_original
+```
+
+```{r Intersection-FFT-handle-1-IDk}
+# Define the two functions: ----
+FFT_handle <-  function(x) key_results$mn_hi[2] * cost_hi +
+                    key_results$mn_mi[2] * x * cost_hi +
+                    key_results$mn_fa[2] * x * cost_hi +
+                    key_results$mn_cr[2] * cost_cr 
+
+
+one_IDK <- function(x)pc_table$`TRUE (reality) %`[1] * cost_hi +
+               pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
+               pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
+               pc_table$`TRUE (reality) %`[4] *  x * cost_hi +
+               pc_table$`FALSE (reality) %`[1] *  x * cost_hi +
+               pc_table$`FALSE (reality) %`[2] * cost_IDK_fa +
+               pc_table$`FALSE (reality) %`[3] * cost_IDK_cr +
+               pc_table$`FALSE (reality) %`[4] * cost_cr 
+    
+
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  one_IDK(x)  - FFT_handle(x), interval = c(-1000, 1000))
+intersection_point_IDK_1_FFT_handle <- intersection$root
+
+# Print the intersection point:
+intersection_point_IDK_1_FFT_handle
+```
+
+```{r Intersection-original-all-IDk}
+# Define the two functions: ----
+original <-  function(x) pc_original_table$`TRUE (reality) %`[1] * cost_hi +
+      pc_original_table$`TRUE (reality) %`[2] *  x * cost_hi +
+      pc_original_table$`FALSE (reality) %`[1] *  x * cost_hi +
+      pc_original_table$`FALSE (reality) %`[2] * cost_cr
+
+
+all_IDK <- function(x) pc_table_all$`TRUE (reality) %`[1] * cost_hi +
+  pc_table_all$`TRUE (reality) %`[2] * cost_IDK_hi +
+  pc_table_all$`TRUE (reality) %`[3] * cost_IDK_mi +
+  pc_table_all$`TRUE (reality) %`[4] * x * cost_hi +
+  pc_table_all$`FALSE (reality) %`[1] * x * cost_hi +
+  pc_table_all$`FALSE (reality) %`[2] * cost_IDK_fa +
+  pc_table_all$`FALSE (reality) %`[3] * cost_IDK_cr +
+  pc_table_all$`FALSE (reality) %`[4] * cost_cr 
+  
+  
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  all_IDK(x) - original(x), interval = c(-1000, 1000))
+intersection_point_IDK_all_original <- intersection$root
+
+# Print the intersection point
+intersection_point_IDK_all_original
+```
+
+```{r Intersection-FFT-handle-all-IDk}
+# Define the two functions: ----
+FFT_handle <-  function(x) key_results$mn_hi[2] * cost_hi +
+                    key_results$mn_mi[2] * x * cost_hi +
+                    key_results$mn_fa[2] * x * cost_hi +
+                    key_results$mn_cr[2] * cost_cr 
+
+all_IDK <- function(x) pc_table_all$`TRUE (reality) %`[1] * cost_hi +
+  pc_table_all$`TRUE (reality) %`[2] * cost_IDK_hi +
+  pc_table_all$`TRUE (reality) %`[3] * cost_IDK_mi +
+  pc_table_all$`TRUE (reality) %`[4] * x * cost_hi +
+  pc_table_all$`FALSE (reality) %`[1] * x * cost_hi +
+  pc_table_all$`FALSE (reality) %`[2] * cost_IDK_fa +
+  pc_table_all$`FALSE (reality) %`[3] * cost_IDK_cr +
+  pc_table_all$`FALSE (reality) %`[4] * cost_cr 
+
+
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  all_IDK(x) - FFT_handle(x), interval = c(-1000, 1000))
+intersection_point_IDK_all_FFT_handle <- intersection$root
+
+# Print the intersection point
+intersection_point_IDK_all_FFT_handle
+```
+
+```{r collect-intersection-points}
+# collect all intersection points: ----
+all_intersection_points <- c(intersection_point_IDK_1_original, intersection_point_IDK_1_FFT_handle, intersection_point_IDK_all_original, intersection_point_IDK_all_FFT_handle )
+
+# filter only important variable: 
+costs_IDK_intersections <- all_intersection_points
+```
+
+```{r display-intersection-points}
+# display saved performance: ----
+costs_IDK_intersections 
+```
+
+--- here now! ---
+
+
+# build table, cost of hi, mi, cr, fa = 2, IDK = x: ----
+
+```{r table-all-2-IDK-x}
+
+# Define x: ----
+x <- seq(-2, 2, length.out = 100)
+
+# Variables needed:----
+cost_hi <- 2
+cost_mi <- -2
+cost_IDK <- x
+cost_IDK_hi <- cost_IDK
+cost_IDK_mi <- cost_IDK
+cost_fa <- cost_mi
+cost_IDK_fa <- cost_IDK
+cost_IDK_cr <- cost_IDK
+cost_cr <- cost_hi
+
+# Calculate all y: ----
+# Calculate y1 for each x value
+original <- pc_original_table$`TRUE (reality) %`[1] * cost_hi +
+      pc_original_table$`TRUE (reality) %`[2] * cost_mi +
+      pc_original_table$`FALSE (reality) %`[1] * cost_fa +
+      pc_original_table$`FALSE (reality) %`[2] * cost_cr
+
+# Calculate y2 for each x value (example calculation)
+IDK_1 <- pc_table$`TRUE (reality) %`[1] * cost_hi +
+               pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
+               pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
+               pc_table$`TRUE (reality) %`[4] * cost_mi +
+               pc_table$`FALSE (reality) %`[1] * cost_fa +
+               pc_table$`FALSE (reality) %`[2] * cost_IDK_fa +
+               pc_table$`FALSE (reality) %`[3] * cost_IDK_cr +
+               pc_table$`FALSE (reality) %`[4] * cost_cr 
+
+# Calculate y3 for each x value (example calculation)
+IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
+  pc_table_all$`TRUE (reality) %`[2] * cost_IDK_hi +
+  pc_table_all$`TRUE (reality) %`[3] * cost_IDK_mi +
+  pc_table_all$`TRUE (reality) %`[4] * cost_mi +
+  pc_table_all$`FALSE (reality) %`[1] * cost_fa +
+  pc_table_all$`FALSE (reality) %`[2] * cost_IDK_fa +
+  pc_table_all$`FALSE (reality) %`[3] * cost_IDK_cr +
+  pc_table_all$`FALSE (reality) %`[4] * cost_cr 
+
+# probabilities taken from the table above:
+ FFT_handle <- key_results$mn_hi[2] * cost_hi +
+                    key_results$mn_mi[2] * cost_mi +
+                    key_results$mn_fa[2] * cost_fa +
+                    key_results$mn_cr[2] * cost_cr 
+
+# Plot the graph with multiple y variables: ----
+plot(x, IDK_1, type = "l",ylim = c(0,2), col = "red", xlab = "Costs of IDK", ylab = "Performance")
+lines(x, IDK_all, col = "green")
+abline(h=original,col="purple",lty=1)
+abline(h=FFT_handle,col="blue",lty=1)
+
+
+
+# Add a legend to the graph
+legend("topleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes", "FFT_handle_NAs"), col = c("purple", "red", "green", "blue"), lty = 1)
+
+
+
+```
+# calculations ----
+```{r Intersection-original-1-IDk}
+# Define the two functions: ----
+a <-  1.234323
+
+
+b <- function(x) {
+  
+  # Calculate the value of function b
+  0.383353960	* 2 + 
+    0.120204208 * (-2)+
+     0.412592822	* 2 + 
+    0.068224010 * (-2)+
+    0.006084983 * x+
+      0.001082921 *x+
+    0.001908003 *x+
+    0.006549092 * x
+    
+}
+
+# Find the intersection point:----
+intersection <- uniroot(function(x)  b(x) - a, interval = c(-20, 10))
+intersection_point_IDK_1_original <- intersection$root
+
+# Print the intersection point:
+intersection_point_IDK_1_original
+```
+
+
+```{r Intersection-FFT-handle-1-IDk}
+# Define the two functions: ----
+d <-   0.9755776
+
+
+b <- function(x) {
+  
+  # Calculate the value of function b
+  0.383353960	* 2 + 
+    0.120204208 * (-2)+
+     0.412592822	* 2 + 
+    0.068224010 * (-2)+
+    0.006084983 * x+
+      0.001082921 * x+
+    0.001908003 * x+
+    0.006549092 * x
+    
+}
+
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  b(x) - d, interval = c(-20, 10))
+intersection_point_IDK_1_FFT_handle <- intersection$root
+
+# Print the intersection point:
+intersection_point_IDK_1_FFT_handle
+```
+
+
+```{r Intersection-original-all-IDk}
+# Define the two functions: ----
+a <-  1.234323
+
+
+IDK_all_nodes_f <- function(x) {
+  
+  # Calculate the value of function b
+  0.16429455	* 2 + 
+    0.05151609 * (-2)+
+     0.17682550	* 2 + 
+    0.02923886 * (-2)+
+    0.22514439 * x +
+      0.04006807 * x +
+    0.07059612 * x +
+    0.24231642 * x
+    
+}
+
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  IDK_all_nodes_f(x) - a, interval = c(-1, 10))
+intersection_point_IDK_all_original <- intersection$root
+
+# Print the intersection point: 
+intersection_point_IDK_all_original
+```
+
+
+```{r Intersection-FFT-handle-all-IDk}
+# Define the two functions: ----
+d <-   0.9755776
+
+
+IDK_all_nodes_f <- function(x) {
+  
+  # Calculate the value of function b
+  0.16429455	* 2 + 
+    0.05151609 * (-2)+
+     0.17682550	* 2 + 
+    0.02923886 * (-2)+
+    0.22514439 * x+
+      0.04006807 * x+
+    0.07059612 * x+
+    0.24231642 * x
+    
+}
+
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  IDK_all_nodes_f(x) - d, interval = c(-1, 10))
+intersection_point_IDK_all_FFT_handle <- intersection$root
+
+# Print the intersection point:
+intersection_point_IDK_all_FFT_handle
+```
+
+```{r collect-intersection-points}
+# collect all intersection points: ----
+all_intersection_points <- c(intersection_point_IDK_1_original, intersection_point_IDK_1_FFT_handle, intersection_point_IDK_all_original, intersection_point_IDK_all_FFT_handle )
+# filter only important variables: 
+costs_IDK_intersections <- all_intersection_points
+```
+
+```{r display-intersection-points}
+# display saved performance: ----
+save_performance_1_x
+save_performance_2_x # Erkenntnis: die Schnittpunkte sind identisch *2!
+
+
+```
+
+
+
+
+
+# build table, cost of hi, mi, cr, fa = 4, IDK = x: ----
+
+```{r table-all-4-IDK-x}
+
+# Define x: ----
+x <- seq(-4, 4, length.out = 100)
+
+# Variables needed:----
+cost_hi <- 4
+cost_mi <- -4
+cost_IDK <- x
+cost_IDK_hi <- cost_IDK
+cost_IDK_mi <- cost_IDK
+cost_fa <- cost_mi
+cost_IDK_fa <- cost_IDK
+cost_IDK_cr <- cost_IDK
+cost_cr <- cost_hi
+
+# Calculate all y: ----
+# Calculate y1 for each x value
+original <- pc_original_table$`TRUE (reality) %`[1] * cost_hi +
+      pc_original_table$`TRUE (reality) %`[2] * cost_mi +
+      pc_original_table$`FALSE (reality) %`[1] * cost_fa +
+      pc_original_table$`FALSE (reality) %`[2] * cost_cr
+
+# Calculate y2 for each x value (example calculation)
+IDK_1 <- pc_table$`TRUE (reality) %`[1] * cost_hi +
+               pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
+               pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
+               pc_table$`TRUE (reality) %`[4] * cost_mi +
+               pc_table$`FALSE (reality) %`[1] * cost_fa +
+               pc_table$`FALSE (reality) %`[2] * cost_IDK_fa +
+               pc_table$`FALSE (reality) %`[3] * cost_IDK_cr +
+               pc_table$`FALSE (reality) %`[4] * cost_cr 
+
+# Calculate y3 for each x value (example calculation)
+IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
+  pc_table_all$`TRUE (reality) %`[2] * cost_IDK_hi +
+  pc_table_all$`TRUE (reality) %`[3] * cost_IDK_mi +
+  pc_table_all$`TRUE (reality) %`[4] * cost_mi +
+  pc_table_all$`FALSE (reality) %`[1] * cost_fa +
+  pc_table_all$`FALSE (reality) %`[2] * cost_IDK_fa +
+  pc_table_all$`FALSE (reality) %`[3] * cost_IDK_cr +
+  pc_table_all$`FALSE (reality) %`[4] * cost_cr 
+
+# probabilities taken from the table above:
+ FFT_handle <- key_results$mn_hi[2] * cost_hi +
+                    key_results$mn_mi[2] * cost_mi +
+                    key_results$mn_fa[2] * cost_fa +
+                    key_results$mn_cr[2] * cost_cr 
+
+# Plot the graph with multiple y variables: ----
+plot(x, IDK_1, type = "l",ylim = c(0,4), col = "red", xlab = "Costs of IDK", ylab = "Performance")
+lines(x, IDK_all, col = "green")
+abline(h=original,col="purple",lty=1)
+abline(h=FFT_handle,col="blue",lty=1)
+
+
+
+# Add a legend to the graph
+legend("topleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes", "FFT_handle_NAs"), col = c("purple", "red", "green", "blue"), lty = 1)
+
+
+
+```
+
+# calculations ----
+```{r Intersection-original-1-IDk}
+# Define the two functions: ----
+a <-  2.468647
+
+
+b <- function(x) {
+  
+  # Calculate the value of function b
+  0.383353960	* 4 + 
+    0.120204208 * (-4)+
+     0.412592822	* 4 + 
+    0.068224010 * (-4)+
+    0.006084983 * x+
+      0.001082921 *x+
+    0.001908003 *x+
+    0.006549092 * x
+    
+}
+
+# Find the intersection point:----
+intersection <- uniroot(function(x)  b(x) - a, interval = c(-20, 10))
+intersection_point_IDK_1_original <- intersection$root
+
+# Print the intersection point:
+intersection_point_IDK_1_original
+```
+
+
+```{r Intersection-FFT-handle-1-IDk}
+# Define the two functions: ----
+d <-   1.951155
+
+
+b <- function(x) {
+  
+  # Calculate the value of function b
+  0.383353960	* 4 + 
+    0.140404408 * (-4)+
+     0.412592822	* 4 + 
+    0.068224010 * (-4)+
+    0.006084983 * x+
+      0.001082921 * x+
+    0.001908003 * x+
+    0.006549092 * x
+    
+}
+
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  b(x) - d, interval = c(-40, 40))
+intersection_point_IDK_1_FFT_handle <- intersection$root
+
+# Print the intersection point:
+intersection_point_IDK_1_FFT_handle
+```
+
+
+```{r Intersection-original-all-IDk}
+# Define the two functions: ----
+a <-  2.468647
+
+
+IDK_all_nodes_f <- function(x) {
+  
+  # Calculate the value of function b
+  0.16429455	* 4 + 
+    0.05151609 * (-4)+
+     0.17682550	* 4 + 
+    0.02923886 * (-4)+
+    0.22514439 * x +
+      0.04006807 * x +
+    0.07059612 * x +
+    0.24231642 * x
+    
+}
+
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  IDK_all_nodes_f(x) - a, interval = c(-1, 10))
+intersection_point_IDK_all_original <- intersection$root
+
+# Print the intersection point: 
+intersection_point_IDK_all_original
+```
+
+
+```{r Intersection-FFT-handle-all-IDk}
+# Define the two functions: ----
+d <-   1.951155
+
+
+IDK_all_nodes_f <- function(x) {
+  
+  # Calculate the value of function b
+  0.16429455	* 4 + 
+    0.05151609 * (-4)+
+     0.17682550	* 4 + 
+    0.02923886 * (-4)+
+    0.22514439 * x+
+      0.04006807 * x+
+    0.07059612 * x+
+    0.24231642 * x
+    
+}
+
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  IDK_all_nodes_f(x) - d, interval = c(-1, 10))
+intersection_point_IDK_all_FFT_handle <- intersection$root
+
+# Print the intersection point:
+intersection_point_IDK_all_FFT_handle
+```
+
+```{r collect-intersection-points}
+# collect all intersection points: ----
+all_intersection_points <- c(intersection_point_IDK_1_original, intersection_point_IDK_1_FFT_handle, intersection_point_IDK_all_original, intersection_point_IDK_all_FFT_handle )
+# filter only important variables: 
+costs_IDK_intersections <- all_intersection_points
+```
+
+```{r display-intersection-points-and-explore!}
+# display saved performance: ----
+save_performance_1_x
+save_performance_2_x # Erkenntnis: die Schnittpunkte sind identisch *2!
+save_performance_4_x # Schnittpunkte wieder identisch *2, oder *4!
+
+# Gedanken:
+
+# das bedeutet doch, dass das Verhältnis, von wie teuer ein IDK im Vgl. zu KOsten von falschen/rischtigen Entscheidungen sein darf, damit es sich lohnt immer identisch bleibt, solange das Verhältnis der Kosten von falschen zu richtigen Entscheidungen identisch bleiben.
+
+
+# testen: 
+save_performance_1_x /1 
+save_performance_2_x /2
+save_performance_4_x /4
+
+# testen mit normalized data:
+(save_performance_1_x -1) / (1- (-1)) # das sind die normierten Verhältnisse, die die Kosten von IDK höchstens annehmen dürfen, damit sie sich noch lohnen.
+(save_performance_2_x -2) / (2- (-2)) 
+(save_performance_4_x -4) / (4- (-4)) 
+
+# testen mit correct normalized data:
+(save_performance_1_x - save_performance_1_x[3]) / (save_performance_1_x[2]- (save_performance_1_x[3])) # stimmt nicht ganz
+(save_performance_2_x -save_performance_2_x[3]) / (save_performance_2_x[2]-save_performance_2_x[3]) 
+(save_performance_4_x -save_performance_4_x[3]) / (save_performance_4_x[2] - save_performance_4_x[3]) 
+
+```
+
+
+
+
+
+
+# build table, cost of hi, mi, cr, fa = 4 & -8, IDK = x: ----
+
+```{r table-8-&-4-IDK-x}
+
+# Define x: ----
+x <- seq(-4, 4, length.out = 100)
+
+# Variables needed:----
+cost_hi <- 4
+cost_mi <- -8
+cost_IDK <- x
+cost_IDK_hi <- cost_IDK
+cost_IDK_mi <- cost_IDK
+cost_fa <- cost_mi
+cost_IDK_fa <- cost_IDK
+cost_IDK_cr <- cost_IDK
+cost_cr <- cost_hi
+
+# Calculate all y: ----
+# Calculate y1 for each x value
+original <- pc_original_table$`TRUE (reality) %`[1] * cost_hi +
+      pc_original_table$`TRUE (reality) %`[2] * cost_mi +
+      pc_original_table$`FALSE (reality) %`[1] * cost_fa +
+      pc_original_table$`FALSE (reality) %`[2] * cost_cr
+
+# Calculate y2 for each x value (example calculation)
+IDK_1 <- pc_table$`TRUE (reality) %`[1] * cost_hi +
+               pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
+               pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
+               pc_table$`TRUE (reality) %`[4] * cost_mi +
+               pc_table$`FALSE (reality) %`[1] * cost_fa +
+               pc_table$`FALSE (reality) %`[2] * cost_IDK_fa +
+               pc_table$`FALSE (reality) %`[3] * cost_IDK_cr +
+               pc_table$`FALSE (reality) %`[4] * cost_cr 
+
+# Calculate y3 for each x value (example calculation)
+IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
+  pc_table_all$`TRUE (reality) %`[2] * cost_IDK_hi +
+  pc_table_all$`TRUE (reality) %`[3] * cost_IDK_mi +
+  pc_table_all$`TRUE (reality) %`[4] * cost_mi +
+  pc_table_all$`FALSE (reality) %`[1] * cost_fa +
+  pc_table_all$`FALSE (reality) %`[2] * cost_IDK_fa +
+  pc_table_all$`FALSE (reality) %`[3] * cost_IDK_cr +
+  pc_table_all$`FALSE (reality) %`[4] * cost_cr 
+
+# probabilities taken from the table above:
+ FFT_handle <- key_results$mn_hi[2] * cost_hi +
+                    key_results$mn_mi[2] * cost_mi +
+                    key_results$mn_fa[2] * cost_fa +
+                    key_results$mn_cr[2] * cost_cr 
+
+# Plot the graph with multiple y variables: ----
+plot(x, IDK_1, type = "l",ylim = c(0,4), col = "red", xlab = "Costs IDK", ylab = "Performance")
+lines(x, IDK_all, col = "green")
+abline(h=original,col="purple",lty=1)
+abline(h=FFT_handle,col="blue",lty=1)
+
+
+
+# Add a legend to the graph
+legend("topleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes", "FFT_handle_NAs"), col = c("purple", "red", "green", "blue"), lty = 1)
+
+
+
+```
+
+# calculations ----
+```{r Intersection-original-1-IDk}
+# Define the two functions: ----
+a <-  1.70297
+
+
+b <- function(x) {
+  
+  # Calculate the value of function b
+  0.383353960	* 4 + 
+    0.120204208 * (-8)+
+     0.412592822	* 4 + 
+    0.068224010 * (-8)+
+    0.006084983 * x+
+      0.001082921 *x+
+    0.001908003 *x+
+    0.006549092 * x
+    
+}
+
+# Find the intersection point:----
+intersection <- uniroot(function(x)  b(x) - a, interval = c(0, 10))
+intersection_point_IDK_1_original <- intersection$root
+
+# Print the intersection point:
+intersection_point_IDK_1_original
+```
+
+
+```{r Intersection-FFT-handle-1-IDk}
+# Define the two functions: ----
+d <-   0.9267327
+
+
+b <- function(x) {
+  
+  # Calculate the value of function b
+  0.383353960	* 4 + 
+    0.140404408 * (-8)+
+     0.412592822	* 4 + 
+    0.068224010 * (-8)+
+    0.006084983 * x+
+      0.001082921 * x+
+    0.001908003 * x+
+    0.006549092 * x
+    
+}
+
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  b(x) - d, interval = c(-40, 40))
+intersection_point_IDK_1_FFT_handle <- intersection$root
+
+# Print the intersection point:
+intersection_point_IDK_1_FFT_handle
+```
+
+
+```{r Intersection-original-all-IDk}
+# Define the two functions: ----
+a <-  1.70297
+
+
+IDK_all_nodes_f <- function(x) {
+  
+  # Calculate the value of function b
+  0.16429455	* 4 + 
+    0.05151609 * (-8)+
+     0.17682550	* 4 + 
+    0.02923886 * (-8)+
+    0.22514439 * x +
+      0.04006807 * x +
+    0.07059612 * x +
+    0.24231642 * x
+    
+}
+
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  IDK_all_nodes_f(x) - a, interval = c(-1, 10))
+intersection_point_IDK_all_original <- intersection$root
+
+# Print the intersection point: 
+intersection_point_IDK_all_original
+```
+
+
+```{r Intersection-FFT-handle-all-IDk}
+# Define the two functions: ----
+d <-   0.9267327
+
+
+IDK_all_nodes_f <- function(x) {
+  
+  # Calculate the value of function b
+  0.16429455	* 4 + 
+    0.05151609 * (-8)+
+     0.17682550	* 4 + 
+    0.02923886 * (-8)+
+    0.22514439 * x+
+      0.04006807 * x+
+    0.07059612 * x+
+    0.24231642 * x
+    
+}
+
+# Find the intersection point: ----
+intersection <- uniroot(function(x)  IDK_all_nodes_f(x) - d, interval = c(-1, 10))
+intersection_point_IDK_all_FFT_handle <- intersection$root
+
+# Print the intersection point:
+intersection_point_IDK_all_FFT_handle
+```
+
+```{r collect-intersection-points}
+# collect all intersection points: ----
+all_intersection_points <- c(intersection_point_IDK_1_original, intersection_point_IDK_1_FFT_handle, intersection_point_IDK_all_original, intersection_point_IDK_all_FFT_handle )
+# filter only important variables: 
+costs_IDK_intersections <- all_intersection_points
+```
+
+```{r display-intersection-points-and-explore!}
+# display saved performance: ----
+save_performance_1_x
+save_performance_2_x # Erkenntnis: die Schnittpunkte sind identisch *2!
+save_performance_4_x # Schnittpunkte wieder identisch *2, oder *4!
+
+save_performance_4and8_x
+
+# Gedanken:
+
+# das bedeutet doch, dass das Verhältnis, von wie teuer ein IDK im Vgl. zu KOsten von falschen/rischtigen Entscheidungen sein darf, damit es sich lohnt immer identisch bleibt, solange das Verhältnis der Kosten von falschen zu richtigen Entscheidungen identisch bleiben.
+
+
+# testen: 
+save_performance_1_x /1 
+save_performance_2_x /2
+save_performance_4_x /4
+
+# testen mit normalized data:
+(save_performance_1_x -1) / (1- (-1)) # das sind die normierten Verhältnisse, die die Kosten von IDK höchstens annehmen dürfen, damit sie sich noch lohnen.
+(save_performance_2_x -2) / (2- (-2)) 
+(save_performance_4_x -4) / (4- (-4)) 
+(save_performance_4and8_x -8) / (4-(-8)) # zeigt: sobald sich Verhältnisse der Kosten richtiger vs falscher Entscheidungen verändern, verändert sich selbst das normierte Verhältnis der Kosten, die IDK annehmen dürfen.
+
+(save_performance_4and8_x -save_performance_4and8_x[3]) / (-save_performance_4and8_x[2]-save_performance_4and8_x[3])
+
+```
+
+
+
+
