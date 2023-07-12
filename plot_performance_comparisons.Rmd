@@ -193,7 +193,7 @@ legend("bottomright", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes
 
 
 ```
-
+# calculations ----
 
 ```{r Intersection-original-1-IDk}
 # Define the two functions: ----
@@ -384,7 +384,7 @@ legend("topleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes", "
 
 
 ```
-
+# calculations ----
 ```{r Intersection-original-1-IDk}
 # Define the two functions: ----
 a <-  1.234323
@@ -581,6 +581,7 @@ legend("topleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes", "
 
 ```
 
+# calculations ----
 ```{r Intersection-original-1-IDk}
 # Define the two functions: ----
 a <-  2.468647
@@ -798,6 +799,7 @@ legend("topleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes", "
 
 ```
 
+# calculations ----
 ```{r Intersection-original-1-IDk}
 # Define the two functions: ----
 a <-  1.70297
