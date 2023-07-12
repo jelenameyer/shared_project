@@ -4,6 +4,7 @@ author: "JM and HN"
 date: "2023-07-07"
 output: html_document
 ---
+# all for 25% missing data!!!
 
 # build table, cost of hi, mi, cr, fa = x, IDK = 0: ----
 ```{r table-all-x-IDK-0}
@@ -66,7 +67,7 @@ legend("bottomright", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes
 ```
 
 
-# build table, cost of hi, mi, cr, fa = 1 and -1 *x, IDK = 0: ----
+# build table, cost of hi, mi, cr, fa = 1 and x, IDK = 0: ----
 ```{r table-all-x-IDK-0}
 # Define x: ----
 x <- seq(-3, 0, length.out = 100)
@@ -76,7 +77,7 @@ cost_IDK <- 0
 cost_hi <- 1
 cost_IDK_hi <- cost_IDK
 cost_IDK_mi <- cost_IDK
-cost_mi <- 1 *x
+cost_mi <- x
 cost_fa <- cost_mi
 cost_IDK_fa <- cost_IDK
 cost_IDK_cr <- cost_IDK
@@ -179,10 +180,10 @@ IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
                     key_results$mn_cr[2] * cost_cr 
 
 # Plot the graph with multiple y variables: ----
-plot(x, IDK_1, type = "l",ylim = c(0,1), col = "red", xlab = "relationship costs IDK vs fa/mi", ylab = "Performance")
+plot(x, IDK_1, type = "l",ylim = c(0,1), col = "red", xlab = "Costs of IDK", ylab = "Performance")
 lines(x, IDK_all, col = "green")
-abline(h=original,col="purple",lty=2)
-abline(h=FFT_handle,col="blue",lty=2)
+abline(h=original,col="purple",lty=1)
+abline(h=FFT_handle,col="blue",lty=1)
 
 
 
@@ -370,10 +371,10 @@ IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
                     key_results$mn_cr[2] * cost_cr 
 
 # Plot the graph with multiple y variables: ----
-plot(x, IDK_1, type = "l",ylim = c(0,2), col = "red", xlab = "relationship costs IDK vs fa/mi", ylab = "Performance")
+plot(x, IDK_1, type = "l",ylim = c(0,2), col = "red", xlab = "Costs of IDK", ylab = "Performance")
 lines(x, IDK_all, col = "green")
-abline(h=original,col="purple",lty=2)
-abline(h=FFT_handle,col="blue",lty=2)
+abline(h=original,col="purple",lty=1)
+abline(h=FFT_handle,col="blue",lty=1)
 
 
 
@@ -566,10 +567,10 @@ IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
                     key_results$mn_cr[2] * cost_cr 
 
 # Plot the graph with multiple y variables: ----
-plot(x, IDK_1, type = "l",ylim = c(0,4), col = "red", xlab = "relationship costs IDK vs fa/mi", ylab = "Performance")
+plot(x, IDK_1, type = "l",ylim = c(0,4), col = "red", xlab = "Costs of IDK", ylab = "Performance")
 lines(x, IDK_all, col = "green")
-abline(h=original,col="purple",lty=2)
-abline(h=FFT_handle,col="blue",lty=2)
+abline(h=original,col="purple",lty=1)
+abline(h=FFT_handle,col="blue",lty=1)
 
 
 
@@ -719,6 +720,11 @@ save_performance_4_x /4
 (save_performance_2_x -2) / (2- (-2)) 
 (save_performance_4_x -4) / (4- (-4)) 
 
+# testen mit correct normalized data:
+(save_performance_1_x - save_performance_1_x[3]) / (save_performance_1_x[2]- (save_performance_1_x[3])) # stimmt nicht ganz
+(save_performance_2_x -save_performance_2_x[3]) / (save_performance_2_x[2]-save_performance_2_x[3]) 
+(save_performance_4_x -save_performance_4_x[3]) / (save_performance_4_x[2] - save_performance_4_x[3]) 
+
 ```
 
 
@@ -780,8 +786,8 @@ IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
 # Plot the graph with multiple y variables: ----
 plot(x, IDK_1, type = "l",ylim = c(0,4), col = "red", xlab = "Costs IDK", ylab = "Performance")
 lines(x, IDK_all, col = "green")
-abline(h=original,col="purple",lty=2)
-abline(h=FFT_handle,col="blue",lty=2)
+abline(h=original,col="purple",lty=1)
+abline(h=FFT_handle,col="blue",lty=1)
 
 
 
@@ -933,6 +939,9 @@ save_performance_4_x /4
 (save_performance_2_x -2) / (2- (-2)) 
 (save_performance_4_x -4) / (4- (-4)) 
 (save_performance_4and8_x -8) / (4-(-8)) # zeigt: sobald sich Verhältnisse der Kosten richtiger vs falscher Entscheidungen verändern, verändert sich selbst das normierte Verhältnis der Kosten, die IDK annehmen dürfen.
+
+(save_performance_4and8_x -save_performance_4and8_x[3]) / (-save_performance_4and8_x[2]-save_performance_4and8_x[3])
+
 ```
 
 
