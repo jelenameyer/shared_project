@@ -1775,7 +1775,7 @@ legend("bottomleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes"
 
 
     # Find the intersection point for the specific pc value:
-    intersection <- uniroot(function(x) one_IDK(x, pc) - original(x), interval = c(-10, 10))
+    intersection <- uniroot(function(x) one_IDK(x, pc) - original(x), interval = c(-1000, 1000))
     all_intersection_points_IDK_1_original[l] <- intersection$root
   }
 all_intersection_points_IDK_1_original
@@ -1889,7 +1889,7 @@ all_intersection_points_IDK_all_FFT_handle_breastcancer
 
 ```{r compare-1-IDK-FFT-handle-false-decision-is-x}
 
-# plot both and a vertical line at 0, that is the cost of IDK decisions: 
+# plot both and a vertical line at 0, that is the cost of IDK decisions: ----
 plot(pcs, all_intersection_points_IDK_1_FFT_handle_titanic , type='o',lty=2,col='darkgreen',lwd=1, main = "Costs of False decisions, where when more expensive 1_IDK starts performing better than FFT_handle.")
 abline(h = 0, col='red',lty = 2)
 
@@ -1943,8 +1943,8 @@ intersection_point
 
 ```{r compare-all-IDK-FFT-handle}
 
-# plot both and a vertical line at 0, that is the cost of IDK decisions: 
-plot(pcs, all_intersection_points_IDK_all_FFT_handle_titanic , type='o',lty=2,ylim = c(-4,2),col='darkgreen',lwd=1,  main = "Costs of False decisions, where when more expensive all_IDK starts performing better than FFT_handle.")
+# plot both and a vertical line at 0, that is the cost of IDK decisions: ----
+plot(pcs, all_intersection_points_IDK_all_FFT_handle_titanic , type='o',lty=2,ylim = c(-6,2),col='darkgreen',lwd=1,  main = "Costs of False decisions, where when more expensive all_IDK starts performing better than FFT_handle.")
 
 # Add the second line to the plot using the lines function:
 lines(pcs, all_intersection_points_IDK_all_FFT_handle_heartdisease, type = 'o', lty = 2, col = 'blue', lwd = 1)
