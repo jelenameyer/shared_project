@@ -1,7 +1,7 @@
 ---
 title: "automating_pcs_per_dataset"
 author: "JM and HN"
-date: "2023-07-18"
+date: "2023-07-21"
 output: html_document
 ---
 # basics: ----
@@ -11,12 +11,10 @@ require(FFTrees)
 library(dplyr)
 ```
 
-```{r define_costs_and_pc_missing}
+```{r define-costs-and-pc-missing}
 # Variables needed: 
-
-# Define x: ----
+# Define x: 
 x <- seq(-10, 1, length.out = 100)
-
 
 # costs could e.g. be:
 cost_hi <- 1
@@ -28,16 +26,14 @@ cost_IDK_fa <- cost_IDK_hi
 cost_IDK_cr <- cost_IDK_hi
 cost_cr <- cost_hi
 
-
-# define percentage that is missing in every variable of the data: 
-# Define the vector of pc values:
+# define vector of percentages that is missing in every variable of the data: 
 pcs <- c(0.05, 0.10, 0.20, 0.25, 0.50, 0.60, 0.75, 1)
 
 ```
 
 # Define some functions: ----
-```{r  Define_functions_replace_values}
-# Define Loop functions (for multiple simulations) ----
+```{r  Define-functions-replace-values}
+# Define Loop functions (for multiple simulations): ----
 replace_values <- function(data, cols, amount, replacement = NA, levels_amount = NULL) {
 
 
@@ -121,7 +117,6 @@ replace_values <- function(data, cols, amount, replacement = NA, levels_amount =
 ```
 
 ```{r define-loop-NA-function}
-
 loop_NA <- function(data, criterion, pc, x, fft_df, x_stats_1){
 
 
@@ -205,9 +200,6 @@ return(results) # as data frame.
 ```
 
 ```{r define-loop-pc-function}
-
-# as input a vector with different pcs for which you want data:
-
 loop_pc <- function(data, data_name, criterion, several_pcs, x, fft_df, x_stats_1){
 
   # Initialize list to store results:
@@ -230,13 +222,9 @@ loop_pc <- function(data, data_name, criterion, several_pcs, x, fft_df, x_stats_
   return(results_dataframes)# as list.
 
 } # loop_pc.
-
 ```
 
 ```{r define-loop-datasets-function}
-
-# as input a vector with different data sets for which you want data:
-
 loop_datasets <- function(several_data, data_names, several_criterion, several_pcs){
 
   # Preparations:
@@ -312,8 +300,8 @@ loop_datasets <- function(several_data, data_names, several_criterion, several_p
 
 
 
-# titanic: ----
 
+# titanic: ----
 ```{r baseline}
 # build example tree with data set: ----
 # define individually per data set!!!
@@ -388,30 +376,26 @@ original_costs <- pc_original_table$`TRUE (reality) %`[1] * cost_hi +
                   pc_original_table$`TRUE (reality) %`[2] * cost_mi +
                   pc_original_table$`FALSE (reality) %`[1] * cost_fa +
                   pc_original_table$`FALSE (reality) %`[2] * cost_cr 
-      
-
-
 
 ```
 
-```{r 1_IDK_last_node}
+```{r 1-IDK-last-node}
 # Define the column and row names:
 col_names <- c("TRUE (reality)", "FALSE (reality)")
 row_names <- c("TRUE (decision)", "IDK_TRUE (decision)", "IDK_FALSE (decision)", "FALSE (decision)")
-
 
 # Create an empty list to store the tables and costs:
 tables <- list()
 IDK_1_values <- list()
 
-# Loop over each pc value and calculate the table and costs
+# Loop over each pc value and calculate the table and costs:
 for (i in 1:length(pcs)) {
   pc <- pcs[i]
   
-  # Calculate the number of missings in all categories
+  # Calculate the number of missings in all categories:
   p <- pc^nodes
   
-  # Calculate the values for each cell
+  # Calculate the values for each cell:
   hit <- HIT - (HIT * p)
   IDK_hit <- HIT * p
   IDK_mi <- MI * p
@@ -421,36 +405,36 @@ for (i in 1:length(pcs)) {
   IDK_cr <- CR * p
   cr <- CR - (CR * p)
   
-  # Collect values in a vector
+  # Collect values in a vector:
   values <- c(hit, IDK_hit, IDK_mi, mi, fa, IDK_fa, IDK_cr, cr)
   
-  # Create the matrix
+  # Create the matrix:
   matrix_values <- matrix(values, nrow = length(row_names), ncol = length(col_names))
   
-  # Create the data frame
+  # Create the data frame:
   table <- data.frame(matrix_values, row.names = row_names)
   
-  # Rename the columns
+  # Rename the columns:
   colnames(table) <- col_names
   
   
-  # Calculate the percentages: Divide each cell by n
+  # Calculate the percentages: Divide each cell by n:
   pc_table <- table %>%
     mutate_all(~ . / n)
   
-  # New column names for percentages
+  # New column names for percentages:
   col_names_pc <- c("TRUE (reality) %", "FALSE (reality) %")
   
-  # Rename the columns in the percentage table
+  # Rename the columns in the percentage table:
   colnames(pc_table) <- col_names_pc
   
-  # Print the new data frame
+  # Print the new data frame:
   print(pc_table)
   
-  # Store the table in the list
+  # Store the table in the list:
   tables[[as.character(pc)]] <- pc_table
   
-  # Calculate the costs using probabilities from the table
+  # Calculate the costs using probabilities from the table:
   IDK_1 <- pc_table$`TRUE (reality) %`[1] * cost_hi +
     pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
     pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
@@ -460,31 +444,31 @@ for (i in 1:length(pcs)) {
     pc_table$`FALSE (reality) %`[3] * cost_IDK_cr +
     pc_table$`FALSE (reality) %`[4] * cost_cr
   
-  # Store the IDK_1 value
+  # Store the IDK_1 value:
   IDK_1_values[[as.character(pc)]] <- IDK_1
 }
 
-# Access each table using the pc value as the key
+# Access each table using the pc value as the key (examples):
 tables$`0.75`
 IDK_1_values$"0.5"
 
 
 ```
 
-```{r IDK_every_node}
+```{r IDK-every-node}
 
-# Create an empty list to store the tables and costs
+# Create an empty list to store the tables and costs:
 tables_all <- list()
 IDK_all_values <- list()
 
-# Loop over each pc value and calculate the table and costs
+# Loop over each pc value and calculate the table and costs:
 for (i in 1:length(pcs)) {
   pc <- pcs[i]
   
-  # Calculate p_all
+  # Calculate percentage of missings which are excluded:
   p_all <- pc + (1 - pc) * pc + (1 - pc) * (1 - pc) * pc
   
-  # Calculate the values for each cell
+  # Calculate the values for each cell:
   hit <- HIT - (HIT * p_all)
   IDK_hit <- HIT * p_all
   IDK_mi <- MI * p_all
@@ -494,35 +478,35 @@ for (i in 1:length(pcs)) {
   IDK_cr <- CR * p_all
   cr <- CR - (CR * p_all)
   
-  # Collect values in a vector
+  # Collect values in a vector:
   values <- c(hit, IDK_hit, IDK_mi, mi, fa, IDK_fa, IDK_cr, cr)
   
-  # Create the matrix
+  # Create the matrix:
   matrix_values <- matrix(values, nrow = length(row_names), ncol = length(col_names))
   
-  # Create the data frame
+  # Create the data frame:
   table_all <- data.frame(matrix_values, row.names = row_names)
   
-  # Rename the columns
+  # Rename the columns:
   colnames(table_all) <- col_names
   
-  # Calculate the percentages: Divide each cell by n
+  # Calculate the percentages: Divide each cell by n:
   pc_table_all <- table_all %>%
     mutate_all(~ . / n)
   
-  # New column names for percentages
+  # New column names for percentages:
   col_names_pc <- c("TRUE (reality) %", "FALSE (reality) %")
   
-  # Rename the columns in the percentage table
+  # Rename the columns in the percentage table:
   colnames(pc_table_all) <- col_names_pc
   
-  # Print the new data frame
+  # Print the new data frame:
   print(pc_table_all)
   
-  # Store the table in the list
+  # Store the table in the list:
   tables_all[[as.character(pc)]] <- pc_table_all
   
-# Calculate IDK_all using probabilities from the table_all
+# Calculate IDK_all using probabilities from the table_all:
   IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
               pc_table_all$`TRUE (reality) %`[2] * cost_IDK_hi +
               pc_table_all$`TRUE (reality) %`[3] * cost_IDK_mi +
@@ -532,18 +516,13 @@ for (i in 1:length(pcs)) {
               pc_table_all$`FALSE (reality) %`[3] * cost_IDK_cr +
               pc_table_all$`FALSE (reality) %`[4] * cost_cr
   
- # Store the IDK_all value
+ # Store the IDK_all value:
   IDK_all_values[[as.character(pc)]] <- IDK_all
 }
-
-# Access each table and cost using the pc value as the key
-tables_all$"0.2"
-IDK_all_values$"0.6"
-
 ```
 
 ```{r Handle-NA-with-FFTrees}
-# Use function for example 25%: ----
+# Use function:----
 
 dfs <- loop_datasets(several_data = list(titanic),
                       data_names = c("titanic"), 
@@ -553,26 +532,25 @@ dfs <- loop_datasets(several_data = list(titanic),
 
 # assign names to output dfs: ----
 
-# list of names
+# list of names:
 names_list <- c("titanic")
 
-# loop over names
+# loop over names:
 for (name in names_list) {
   
-  # loop over percentages
+  # loop over percentages:
   for (pc in pcs) {
     
-    # create the name of the dataframe in dfs$results
+    # create the name of the dataframe in dfs$results:
     df_name <- paste0(name, "_", pc * 100, "pc")
     
-    # create the name of the variable
+    # create the name of the variable:
     var_name <- paste0(name, "_NA_", pc * 100)
     
-    # assign the dataframe to a new variable
+    # assign the dataframe to a new variable:
     assign(var_name, dfs$results[[name]][[df_name]])
   }
 }
-
 ```
 
 ```{r key-results}
@@ -587,11 +565,9 @@ for (name in data_names) {
   key_results <- data.frame(matrix(NA, nrow = length(pcs), ncol = 5))
   names(key_results) <- c("pc_NA", "mn_hi", "mn_fa", "mn_mi", "mn_cr")
 
-  # Here, the index `l` is used to iterate over `several_pcs`
   for (l in 1:length(pcs)) {
     input_var <- paste0(name, "_NA_", pcs[l] * 100)
     
-    # Row for each pc: in pc
     key_results[l, "pc_NA"] <- pcs[l] * 100
     key_results[l, "mn_hi"] <- mean(get(input_var)$hi[-1])/n
     key_results[l, "mn_fa"] <- mean(get(input_var)$fa[-1])/n
@@ -600,26 +576,25 @@ for (name in data_names) {
   }
 }
 
+# example:
 key_results[key_results$pc_NA == 60,]
-
-
 ```
 
-```{r calculate_costs}
+```{r calculate-costs}
 
-# Create an empty list to store the handle_NA_costs values for each pc
+# Create an empty list to store the handle_NA_costs values for each pc:
 handle_NA_costs_list <- list()
 
-# Loop over each pc value
+# Loop over each pc value:
 for (l in 1:length(pcs)) {
   
-  # Calculate the handle_NA_costs variable for the current pc value
+  # Calculate the handle_NA_costs variable for the current pc value:
   handle_NA_costs <- key_results$mn_hi[l] * cost_hi +
                       key_results$mn_mi[l] * cost_mi +
                       key_results$mn_fa[l] * cost_fa +
                       key_results$mn_cr[l] * cost_cr
   
-  # Store the handle_NA_costs value in the list
+  # Store the handle_NA_costs value in the list:
   handle_NA_costs_list[[as.character(pcs[l])]] <- handle_NA_costs
 }
 
@@ -629,7 +604,7 @@ handle_NA_costs_0.2 <- handle_NA_costs_list[["0.2"]]
 
 ```
 
-```{r Compare_costs_across_proceedings}
+```{r Compare-costs-across-proceedings}
 # Define x: ----
 x <- seq(-10, 2, length.out = 100)
 
@@ -656,7 +631,7 @@ original_costs <- pc_original_table$`TRUE (reality) %`[1] * cost_hi +
                   pc_original_table$`FALSE (reality) %`[1] * cost_fa +
                   pc_original_table$`FALSE (reality) %`[2] * cost_cr 
       
-# Calculate y2 for each x value (example calculation):
+# Calculate y2 for each x value:
 IDK_1 <- tables[[as.character(pc)]]$`TRUE (reality) %`[1] * cost_hi +
                tables[[as.character(pc)]]$`TRUE (reality) %`[2] * cost_IDK_hi +
                tables[[as.character(pc)]]$`TRUE (reality) %`[3] * cost_IDK_mi +
@@ -666,7 +641,7 @@ IDK_1 <- tables[[as.character(pc)]]$`TRUE (reality) %`[1] * cost_hi +
                tables[[as.character(pc)]]$`FALSE (reality) %`[3] * cost_IDK_cr +
                tables[[as.character(pc)]]$`FALSE (reality) %`[4] * cost_cr 
 
-# Calculate y3 for each x value (example calculation):
+# Calculate y3 for each x value:
 IDK_all <- tables_all[[as.character(pc)]]$`TRUE (reality) %`[1] * cost_hi +
                tables_all[[as.character(pc)]]$`TRUE (reality) %`[2] * cost_IDK_hi +
                tables_all[[as.character(pc)]]$`TRUE (reality) %`[3] * cost_IDK_mi +
@@ -689,30 +664,28 @@ lines(x, IDK_1, col = "darkgreen")
 lines(x, IDK_all, col = "green")
 lines(x, handle_NA_costs, col = "orange")
 
-# Add a legend to the graph
+# Add a legend to the graph:
 legend("bottomleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes", "FFT_handle_NAs"), col = c("red", "darkgreen", "green", "orange"), lty = 1)
-
 
 }
 ```
 
 ```{r Intersection-original-1-IDk}
 
-
-# Initialize an empty vector to store the intersection points
+# Initialize an empty vector to store the intersection points:
   all_intersection_points_IDK_1_original <- numeric(length(pcs))
 
-  # Loop over each pc value
+  # Loop over each pc value:
   for (l in 1:length(pcs)) {
     pc <- pcs[l]
 
-    # Define the original and FFT_handle functions based on the given inputs:
+    # Define the original function based on the given inputs:
     original <- function(x) pc_original_table$`TRUE (reality) %`[1] * cost_hi +
       pc_original_table$`TRUE (reality) %`[2] * x * cost_hi +
       pc_original_table$`FALSE (reality) %`[1] * x * cost_hi +
       pc_original_table$`FALSE (reality) %`[2] * cost_cr
 
-  # Define the one_IDK and all_IDK functions based on the given inputs:
+  # Define the one_IDK function based on the given inputs:
     one_IDK <- function(x, pc) {
       tables[[as.character(pc)]]$`TRUE (reality) %`[1] * cost_hi +
       tables[[as.character(pc)]]$`TRUE (reality) %`[2] * cost_IDK_hi +
@@ -725,7 +698,7 @@ legend("bottomleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes"
     }
 
 
-    # Find the intersection point for the specific pc value:
+    # Find the intersection point for each specific pc value:
     intersection <- uniroot(function(x) one_IDK(x, pc) - original(x), interval = c(-10, 10))
     all_intersection_points_IDK_1_original[l] <- intersection$root
   }
@@ -738,7 +711,7 @@ all_intersection_points_IDK_1_original
 # Initialize an empty vector to store the intersection points
   all_intersection_points_IDK_1_FFT_handle_titanic <- numeric(length(pcs))
 
-  # Loop over each pc value
+  # Loop over each pc value:
   for (l in 1:length(pcs)) {
     pc <- pcs[l]
     
@@ -769,20 +742,20 @@ all_intersection_points_IDK_1_FFT_handle_titanic
 
 ```{r Intersection-original-all-IDk}
 
-# Initialize an empty vector to store the intersection points
+# Initialize an empty vector to store the intersection points:
   all_intersection_points_IDK_all_original <- numeric(length(pcs))
 
-  # Loop over each pc value
+  # Loop over each pc value:
   for (l in 1:length(pcs)) {
     pc <- pcs[l]
 
-    # Define the original and FFT_handle functions based on the given inputs:
+    # Define the original function based on the given inputs:
     original <- function(x) pc_original_table$`TRUE (reality) %`[1] * cost_hi +
       pc_original_table$`TRUE (reality) %`[2] * x * cost_hi +
       pc_original_table$`FALSE (reality) %`[1] * x * cost_hi +
       pc_original_table$`FALSE (reality) %`[2] * cost_cr
 
- # Define the all_IDK function with the specific pc value
+ # Define the all_IDK function:
     all_IDK <- function(x, pc) {
       tables_all[[as.character(pc)]]$`TRUE (reality) %`[1] * cost_hi +
         tables_all[[as.character(pc)]]$`TRUE (reality) %`[2] * cost_IDK_hi +
@@ -794,7 +767,7 @@ all_intersection_points_IDK_1_FFT_handle_titanic
         tables_all[[as.character(pc)]]$`FALSE (reality) %`[4] * cost_cr
     }
 
-    # Find the intersection point for the specific pc value:
+    # Find the intersection point for each specific pc value:
     intersection <- uniroot(function(x) all_IDK(x, pc) - original(x), interval = c(-1000, 1000))
     all_intersection_points_IDK_all_original[l] <- intersection$root
   }
@@ -802,10 +775,10 @@ all_intersection_points_IDK_all_original
 ```
 
 ```{r Intersection-FFT-handle-all-IDk}
-# Initialize an empty vector to store the intersection points
+# Initialize an empty vector to store the intersection points:
   all_intersection_points_IDK_all_FFT_handle_titanic <- numeric(length(pcs))
 
-  # Loop over each pc value
+  # Loop over each pc value:
   for (l in 1:length(pcs)) {
     pc <- pcs[l]
     
@@ -912,13 +885,9 @@ original_costs <- pc_original_table$`TRUE (reality) %`[1] * cost_hi +
                   pc_original_table$`TRUE (reality) %`[2] * cost_mi +
                   pc_original_table$`FALSE (reality) %`[1] * cost_fa +
                   pc_original_table$`FALSE (reality) %`[2] * cost_cr 
-      
-
-
-
 ```
 
-```{r 1_IDK_last_node}
+```{r 1-IDK-last-node}
 # Define the column and row names:
 col_names <- c("TRUE (reality)", "FALSE (reality)")
 row_names <- c("TRUE (decision)", "IDK_TRUE (decision)", "IDK_FALSE (decision)", "FALSE (decision)")
@@ -928,14 +897,14 @@ row_names <- c("TRUE (decision)", "IDK_TRUE (decision)", "IDK_FALSE (decision)",
 tables <- list()
 IDK_1_values <- list()
 
-# Loop over each pc value and calculate the table and costs
+# Loop over each pc value and calculate the table and costs:
 for (i in 1:length(pcs)) {
   pc <- pcs[i]
   
-  # Calculate the number of missings in all categories
+  # Calculate the number of missings in all categories:
   p <- pc^nodes
   
-  # Calculate the values for each cell
+  # Calculate the values for each cell:
   hit <- HIT - (HIT * p)
   IDK_hit <- HIT * p
   IDK_mi <- MI * p
@@ -945,36 +914,36 @@ for (i in 1:length(pcs)) {
   IDK_cr <- CR * p
   cr <- CR - (CR * p)
   
-  # Collect values in a vector
+  # Collect values in a vector:
   values <- c(hit, IDK_hit, IDK_mi, mi, fa, IDK_fa, IDK_cr, cr)
   
-  # Create the matrix
+  # Create the matrix:
   matrix_values <- matrix(values, nrow = length(row_names), ncol = length(col_names))
   
-  # Create the data frame
+  # Create the data frame:
   table <- data.frame(matrix_values, row.names = row_names)
   
-  # Rename the columns
+  # Rename the columns:
   colnames(table) <- col_names
   
   
-  # Calculate the percentages: Divide each cell by n
+  # Calculate the percentages: Divide each cell by n:
   pc_table <- table %>%
     mutate_all(~ . / n)
   
-  # New column names for percentages
+  # New column names for percentages:
   col_names_pc <- c("TRUE (reality) %", "FALSE (reality) %")
   
-  # Rename the columns in the percentage table
+  # Rename the columns in the percentage table:
   colnames(pc_table) <- col_names_pc
   
-  # Print the new data frame
+  # Print the new data frame:
   print(pc_table)
   
-  # Store the table in the list
+  # Store the table in the list:
   tables[[as.character(pc)]] <- pc_table
   
-  # Calculate the costs using probabilities from the table
+  # Calculate the costs using probabilities from the table:
   IDK_1 <- pc_table$`TRUE (reality) %`[1] * cost_hi +
     pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
     pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
@@ -984,31 +953,25 @@ for (i in 1:length(pcs)) {
     pc_table$`FALSE (reality) %`[3] * cost_IDK_cr +
     pc_table$`FALSE (reality) %`[4] * cost_cr
   
-  # Store the IDK_1 value
+  # Store the IDK_1 value::
   IDK_1_values[[as.character(pc)]] <- IDK_1
 }
-
-# Access each table using the pc value as the key
-tables$`0.75`
-IDK_1_values$"0.5"
-
-
 ```
 
-```{r IDK_every_node}
+```{r IDK-every-node}
 
-# Create an empty list to store the tables and costs
+# Create an empty list to store the tables and costs:
 tables_all <- list()
 IDK_all_values <- list()
 
-# Loop over each pc value and calculate the table and costs
+# Loop over each pc value and calculate the table and costs:
 for (i in 1:length(pcs)) {
   pc <- pcs[i]
   
-  # Calculate p_all
+  # Calculate percentage of missings which are excluded:
   p_all <- pc + (1 - pc) * pc + (1 - pc) * (1 - pc) * pc
   
-  # Calculate the values for each cell
+  # Calculate the values for each cell:
   hit <- HIT - (HIT * p_all)
   IDK_hit <- HIT * p_all
   IDK_mi <- MI * p_all
@@ -1018,35 +981,35 @@ for (i in 1:length(pcs)) {
   IDK_cr <- CR * p_all
   cr <- CR - (CR * p_all)
   
-  # Collect values in a vector
+  # Collect values in a vector:
   values <- c(hit, IDK_hit, IDK_mi, mi, fa, IDK_fa, IDK_cr, cr)
   
-  # Create the matrix
+  # Create the matrix:
   matrix_values <- matrix(values, nrow = length(row_names), ncol = length(col_names))
   
-  # Create the data frame
+  # Create the data frame:
   table_all <- data.frame(matrix_values, row.names = row_names)
   
-  # Rename the columns
+  # Rename the columns:
   colnames(table_all) <- col_names
   
-  # Calculate the percentages: Divide each cell by n
+  # Calculate the percentages: Divide each cell by n:
   pc_table_all <- table_all %>%
     mutate_all(~ . / n)
   
-  # New column names for percentages
+  # New column names for percentages:
   col_names_pc <- c("TRUE (reality) %", "FALSE (reality) %")
   
-  # Rename the columns in the percentage table
+  # Rename the columns in the percentage table:
   colnames(pc_table_all) <- col_names_pc
   
-  # Print the new data frame
+  # Print the new data frame:
   print(pc_table_all)
   
-  # Store the table in the list
+  # Store the table in the list:
   tables_all[[as.character(pc)]] <- pc_table_all
   
-# Calculate IDK_all using probabilities from the table_all
+# Calculate IDK_all using probabilities from the table_all:
   IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
               pc_table_all$`TRUE (reality) %`[2] * cost_IDK_hi +
               pc_table_all$`TRUE (reality) %`[3] * cost_IDK_mi +
@@ -1056,47 +1019,39 @@ for (i in 1:length(pcs)) {
               pc_table_all$`FALSE (reality) %`[3] * cost_IDK_cr +
               pc_table_all$`FALSE (reality) %`[4] * cost_cr
   
- # Store the IDK_all value
+ # Store the IDK_all value:
   IDK_all_values[[as.character(pc)]] <- IDK_all
 }
-
-# Access each table and cost using the pc value as the key
-tables_all$"0.2"
-IDK_all_values$"0.6"
-
 ```
 
 ```{r Handle-NA-with-FFTrees}
 # Use function: ----
-
 dfs <- loop_datasets(several_data = list(heartdisease),
                       data_names = c("heartdisease"), 
                       several_criterion = c("diagnosis"),
                       several_pcs = c(pcs))
 
-
 # assign names to output dfs: ----
 
-# list of names
+# list of names:
 names_list <- c("heartdisease")
 
-# loop over names
+# loop over names:
 for (name in names_list) {
   
-  # loop over percentages
+  # loop over percentages:
   for (pc in pcs) {
     
-    # create the name of the dataframe in dfs$results
+    # create the name of the dataframe in dfs$results:
     df_name <- paste0(name, "_", pc * 100, "pc")
     
-    # create the name of the variable
+    # create the name of the variable:
     var_name <- paste0(name, "_NA_", pc * 100)
     
-    # assign the dataframe to a new variable
+    # assign the dataframe to a new variable:
     assign(var_name, dfs$results[[name]][[df_name]])
   }
 }
-
 ```
 
 ```{r key-results}
@@ -1111,11 +1066,9 @@ for (name in data_names) {
   key_results <- data.frame(matrix(NA, nrow = length(pcs), ncol = 5))
   names(key_results) <- c("pc_NA", "mn_hi", "mn_fa", "mn_mi", "mn_cr")
 
-  # Here, the index `l` is used to iterate over `several_pcs`
   for (l in 1:length(pcs)) {
     input_var <- paste0(name, "_NA_", pcs[l] * 100)
     
-    # Row for each pc: in pc
     key_results[l, "pc_NA"] <- pcs[l] * 100
     key_results[l, "mn_hi"] <- mean(get(input_var)$hi[-1])/n
     key_results[l, "mn_fa"] <- mean(get(input_var)$fa[-1])/n
@@ -1123,38 +1076,29 @@ for (name in data_names) {
     key_results[l, "mn_cr"] <- mean(get(input_var)$cr[-1])/n
   }
 }
-
-key_results[key_results$pc_NA == 60,]
-
-
 ```
 
 
-```{r calculate_costs}
+```{r calculate-costs}
 
-# Create an empty list to store the handle_NA_costs values for each pc
+# Create an empty list to store the handle_NA_costs values for each pc:
 handle_NA_costs_list <- list()
 
-# Loop over each pc value
+# Loop over each pc value:
 for (l in 1:length(pcs)) {
   
-  # Calculate the handle_NA_costs variable for the current pc value
+  # Calculate the handle_NA_costs variable for the current pc value:
   handle_NA_costs <- key_results$mn_hi[l] * cost_hi +
                       key_results$mn_mi[l] * cost_mi +
                       key_results$mn_fa[l] * cost_fa +
                       key_results$mn_cr[l] * cost_cr
   
-  # Store the handle_NA_costs value in the list
+  # Store the handle_NA_costs value in the list:
   handle_NA_costs_list[[as.character(pcs[l])]] <- handle_NA_costs
 }
-
-# Access each handle_NA_costs value using the pc value as the key
-# For example, to access the handle_NA_costs value for pc = 0.2:
-handle_NA_costs_0.2 <- handle_NA_costs_list[["0.2"]]
-
 ```
 
-```{r Compare_costs_across_proceedings}
+```{r Compare-costs-across-proceedings}
 # Define x: ----
 x <- seq(-10, 2, length.out = 100)
 
@@ -1169,7 +1113,7 @@ cost_IDK_fa <- cost_IDK
 cost_IDK_cr <- cost_IDK
 cost_cr <- cost_hi
 
-# Loop over each pc value
+# Loop over each pc value:
 for (l in 1:length(pcs)) {
   pc <- pcs[l]
   
@@ -1222,16 +1166,14 @@ legend("bottomleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes"
 ```
 
 ```{r Intersection-original-1-IDk}
-
-
-# Initialize an empty vector to store the intersection points
+# Initialize an empty vector to store the intersection points:
   all_intersection_points_IDK_1_original <- numeric(length(pcs))
 
-  # Loop over each pc value
+  # Loop over each pc value:
   for (l in 1:length(pcs)) {
     pc <- pcs[l]
 
-    # Define the original and FFT_handle functions based on the given inputs:
+    # Define the original function based on the given inputs:
     original <- function(x) pc_original_table$`TRUE (reality) %`[1] * cost_hi +
       pc_original_table$`TRUE (reality) %`[2] * x * cost_hi +
       pc_original_table$`FALSE (reality) %`[1] * x * cost_hi +
@@ -1250,7 +1192,7 @@ legend("bottomleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes"
     }
 
 
-    # Find the intersection point for the specific pc value:
+    # Find the intersection point for each specific pc value:
     intersection <- uniroot(function(x) one_IDK(x, pc) - original(x), interval = c(-10, 10))
     all_intersection_points_IDK_1_original[l] <- intersection$root
   }
@@ -1258,15 +1200,15 @@ all_intersection_points_IDK_1_original
 ```
 
 ```{r Intersection-FFT-handle-1-IDk}
-# Define the two functions: 
 
-# Initialize an empty vector to store the intersection points
+# Initialize an empty vector to store the intersection points:
   all_intersection_points_IDK_1_FFT_handle_heartdisease <- numeric(length(pcs))
 
-  # Loop over each pc value
+  # Loop over each pc value:
   for (l in 1:length(pcs)) {
     pc <- pcs[l]
     
+# Define the two functions: 
 FFT_handle <-  function(x)  key_results$mn_hi[l] * cost_hi +
                       key_results$mn_mi[l] *  x * cost_hi +
                       key_results$mn_fa[l] *  x * cost_hi +
@@ -1301,13 +1243,13 @@ all_intersection_points_IDK_1_FFT_handle_heartdisease
   for (l in 1:length(pcs)) {
     pc <- pcs[l]
 
-    # Define the original and FFT_handle functions based on the given inputs:
+    # Define the original function based on the given inputs:
     original <- function(x) pc_original_table$`TRUE (reality) %`[1] * cost_hi +
       pc_original_table$`TRUE (reality) %`[2] * x * cost_hi +
       pc_original_table$`FALSE (reality) %`[1] * x * cost_hi +
       pc_original_table$`FALSE (reality) %`[2] * cost_cr
 
- # Define the all_IDK function with the specific pc value
+ # Define the all_IDK function with each specific pc value
     all_IDK <- function(x, pc) {
       tables_all[[as.character(pc)]]$`TRUE (reality) %`[1] * cost_hi +
         tables_all[[as.character(pc)]]$`TRUE (reality) %`[2] * cost_IDK_hi +
@@ -1327,10 +1269,10 @@ all_intersection_points_IDK_all_original
 ```
 
 ```{r Intersection-FFT-handle-all-IDk}
-# Initialize an empty vector to store the intersection points
+# Initialize an empty vector to store the intersection points:
   all_intersection_points_IDK_all_FFT_handle_heartdisease <- numeric(length(pcs))
 
-  # Loop over each pc value
+  # Loop over each pc value:
   for (l in 1:length(pcs)) {
     pc <- pcs[l]
     
@@ -1437,13 +1379,9 @@ original_costs <- pc_original_table$`TRUE (reality) %`[1] * cost_hi +
                   pc_original_table$`TRUE (reality) %`[2] * cost_mi +
                   pc_original_table$`FALSE (reality) %`[1] * cost_fa +
                   pc_original_table$`FALSE (reality) %`[2] * cost_cr 
-      
-
-
-
 ```
 
-```{r 1_IDK_last_node}
+```{r 1-IDK-last-node}
 # Define the column and row names:
 col_names <- c("TRUE (reality)", "FALSE (reality)")
 row_names <- c("TRUE (decision)", "IDK_TRUE (decision)", "IDK_FALSE (decision)", "FALSE (decision)")
@@ -1453,14 +1391,14 @@ row_names <- c("TRUE (decision)", "IDK_TRUE (decision)", "IDK_FALSE (decision)",
 tables <- list()
 IDK_1_values <- list()
 
-# Loop over each pc value and calculate the table and costs
+# Loop over each pc value and calculate the table and costs:
 for (i in 1:length(pcs)) {
   pc <- pcs[i]
   
-  # Calculate the number of missings in all categories
+  # Calculate the number of missings in all categories:
   p <- pc^nodes
   
-  # Calculate the values for each cell
+  # Calculate the values for each cell:
   hit <- HIT - (HIT * p)
   IDK_hit <- HIT * p
   IDK_mi <- MI * p
@@ -1470,36 +1408,36 @@ for (i in 1:length(pcs)) {
   IDK_cr <- CR * p
   cr <- CR - (CR * p)
   
-  # Collect values in a vector
+  # Collect values in a vector:
   values <- c(hit, IDK_hit, IDK_mi, mi, fa, IDK_fa, IDK_cr, cr)
   
-  # Create the matrix
+  # Create the matrix:
   matrix_values <- matrix(values, nrow = length(row_names), ncol = length(col_names))
   
-  # Create the data frame
+  # Create the data frame:
   table <- data.frame(matrix_values, row.names = row_names)
   
-  # Rename the columns
+  # Rename the columns:
   colnames(table) <- col_names
   
   
-  # Calculate the percentages: Divide each cell by n
+  # Calculate the percentages: Divide each cell by n:
   pc_table <- table %>%
     mutate_all(~ . / n)
   
-  # New column names for percentages
+  # New column names for percentages:
   col_names_pc <- c("TRUE (reality) %", "FALSE (reality) %")
   
-  # Rename the columns in the percentage table
+  # Rename the columns in the percentage table:
   colnames(pc_table) <- col_names_pc
   
-  # Print the new data frame
+  # Print the new data frame:
   print(pc_table)
   
-  # Store the table in the list
+  # Store the table in the list:
   tables[[as.character(pc)]] <- pc_table
   
-  # Calculate the costs using probabilities from the table
+  # Calculate the costs using probabilities from the table:
   IDK_1 <- pc_table$`TRUE (reality) %`[1] * cost_hi +
     pc_table$`TRUE (reality) %`[2] * cost_IDK_hi +
     pc_table$`TRUE (reality) %`[3] * cost_IDK_mi +
@@ -1509,31 +1447,25 @@ for (i in 1:length(pcs)) {
     pc_table$`FALSE (reality) %`[3] * cost_IDK_cr +
     pc_table$`FALSE (reality) %`[4] * cost_cr
   
-  # Store the IDK_1 value
+  # Store the IDK_1 value:
   IDK_1_values[[as.character(pc)]] <- IDK_1
 }
-
-# Access each table using the pc value as the key
-tables$`0.75`
-IDK_1_values$"0.5"
-
-
 ```
 
-```{r IDK_every_node}
+```{r IDK-every-node}
 
-# Create an empty list to store the tables and costs
+# Create an empty list to store the tables and costs:
 tables_all <- list()
 IDK_all_values <- list()
 
-# Loop over each pc value and calculate the table and costs
+# Loop over each pc value and calculate the table and costs:
 for (i in 1:length(pcs)) {
   pc <- pcs[i]
   
-  # Calculate p_all
+  # calculate pc of missings that are excluded:
   p_all <- pc + (1 - pc) * pc + (1 - pc) * (1 - pc) * pc
   
-  # Calculate the values for each cell
+  # Calculate the values for each cell:
   hit <- HIT - (HIT * p_all)
   IDK_hit <- HIT * p_all
   IDK_mi <- MI * p_all
@@ -1543,35 +1475,35 @@ for (i in 1:length(pcs)) {
   IDK_cr <- CR * p_all
   cr <- CR - (CR * p_all)
   
-  # Collect values in a vector
+  # Collect values in a vector:
   values <- c(hit, IDK_hit, IDK_mi, mi, fa, IDK_fa, IDK_cr, cr)
   
-  # Create the matrix
+  # Create the matrix:
   matrix_values <- matrix(values, nrow = length(row_names), ncol = length(col_names))
   
-  # Create the data frame
+  # Create the data frame:
   table_all <- data.frame(matrix_values, row.names = row_names)
   
-  # Rename the columns
+  # Rename the columns:
   colnames(table_all) <- col_names
   
-  # Calculate the percentages: Divide each cell by n
+  # Calculate the percentages: Divide each cell by n:
   pc_table_all <- table_all %>%
     mutate_all(~ . / n)
   
-  # New column names for percentages
+  # New column names for percentages:
   col_names_pc <- c("TRUE (reality) %", "FALSE (reality) %")
   
-  # Rename the columns in the percentage table
+  # Rename the columns in the percentage table:
   colnames(pc_table_all) <- col_names_pc
   
-  # Print the new data frame
+  # Print the new data frame:
   print(pc_table_all)
   
-  # Store the table in the list
+  # Store the table in the list:
   tables_all[[as.character(pc)]] <- pc_table_all
   
-# Calculate IDK_all using probabilities from the table_all
+# Calculate IDK_all using probabilities from the table_all:
   IDK_all <- pc_table_all$`TRUE (reality) %`[1] * cost_hi +
               pc_table_all$`TRUE (reality) %`[2] * cost_IDK_hi +
               pc_table_all$`TRUE (reality) %`[3] * cost_IDK_mi +
@@ -1581,43 +1513,36 @@ for (i in 1:length(pcs)) {
               pc_table_all$`FALSE (reality) %`[3] * cost_IDK_cr +
               pc_table_all$`FALSE (reality) %`[4] * cost_cr
   
- # Store the IDK_all value
+ # Store the IDK_all value:
   IDK_all_values[[as.character(pc)]] <- IDK_all
 }
-
-# Access each table and cost using the pc value as the key
-tables_all$"0.2"
-IDK_all_values$"0.6"
-
 ```
 
 ```{r Handle-NA-with-FFTrees}
 # Use function: ----
-
 dfs <- loop_datasets(several_data = list(breastcancer),
                       data_names = c("breastcancer"), 
                       several_criterion = c("diagnosis"),
                       several_pcs = c(pcs))
 
-
 # assign names to output dfs: ----
 
-# list of names
+# list of names:
 names_list <- c("breastcancer")
 
-# loop over names
+# loop over names:
 for (name in names_list) {
   
-  # loop over percentages
+  # loop over percentages:
   for (pc in pcs) {
     
-    # create the name of the dataframe in dfs$results
+    # create the name of the dataframe in dfs$results:
     df_name <- paste0(name, "_", pc * 100, "pc")
     
-    # create the name of the variable
+    # create the name of the variable:
     var_name <- paste0(name, "_NA_", pc * 100)
     
-    # assign the dataframe to a new variable
+    # assign the dataframe to a new variable:
     assign(var_name, dfs$results[[name]][[df_name]])
   }
 }
@@ -1636,11 +1561,9 @@ for (name in data_names) {
   key_results <- data.frame(matrix(NA, nrow = length(pcs), ncol = 5))
   names(key_results) <- c("pc_NA", "mn_hi", "mn_fa", "mn_mi", "mn_cr")
 
-  # Here, the index `l` is used to iterate over `several_pcs`
   for (l in 1:length(pcs)) {
     input_var <- paste0(name, "_NA_", pcs[l] * 100)
     
-    # Row for each pc: in pc
     key_results[l, "pc_NA"] <- pcs[l] * 100
     key_results[l, "mn_hi"] <- mean(get(input_var)$hi[-1])/n
     key_results[l, "mn_fa"] <- mean(get(input_var)$fa[-1])/n
@@ -1648,37 +1571,28 @@ for (name in data_names) {
     key_results[l, "mn_cr"] <- mean(get(input_var)$cr[-1])/n
   }
 }
-
-key_results[key_results$pc_NA == 60,]
-
-
 ```
 
-```{r calculate_costs}
+```{r calculate-costs}
 
-# Create an empty list to store the handle_NA_costs values for each pc
+# Create an empty list to store the handle_NA_costs values for each pc:
 handle_NA_costs_list <- list()
 
-# Loop over each pc value
+# Loop over each pc value:
 for (l in 1:length(pcs)) {
   
-  # Calculate the handle_NA_costs variable for the current pc value
+  # Calculate the handle_NA_costs variable for the current pc value:
   handle_NA_costs <- key_results$mn_hi[l] * cost_hi +
                       key_results$mn_mi[l] * cost_mi +
                       key_results$mn_fa[l] * cost_fa +
                       key_results$mn_cr[l] * cost_cr
   
-  # Store the handle_NA_costs value in the list
+  # Store the handle_NA_costs value in the list:
   handle_NA_costs_list[[as.character(pcs[l])]] <- handle_NA_costs
 }
-
-# Access each handle_NA_costs value using the pc value as the key
-# For example, to access the handle_NA_costs value for pc = 0.2:
-handle_NA_costs_0.2 <- handle_NA_costs_list[["0.2"]]
-
 ```
 
-```{r Compare_costs_across_proceedings}
+```{r Compare-costs-across-proceedings}
 # Define x: ----
 x <- seq(-10, 2, length.out = 100)
 
@@ -1693,7 +1607,7 @@ cost_IDK_fa <- cost_IDK
 cost_IDK_cr <- cost_IDK
 cost_cr <- cost_hi
 
-# Loop over each pc value
+# Loop over each pc value:
 for (l in 1:length(pcs)) {
   pc <- pcs[l]
   
@@ -1746,16 +1660,14 @@ legend("bottomleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes"
 ```
 
 ```{r Intersection-original-1-IDk}
-
-
-# Initialize an empty vector to store the intersection points
+# Initialize an empty vector to store the intersection points:
   all_intersection_points_IDK_1_original <- numeric(length(pcs))
 
-  # Loop over each pc value
+  # Loop over each pc value:
   for (l in 1:length(pcs)) {
     pc <- pcs[l]
 
-    # Define the original and FFT_handle functions based on the given inputs:
+    # Define the original function based on the given inputs:
     original <- function(x) pc_original_table$`TRUE (reality) %`[1] * cost_hi +
       pc_original_table$`TRUE (reality) %`[2] * x * cost_hi +
       pc_original_table$`FALSE (reality) %`[1] * x * cost_hi +
@@ -1774,7 +1686,7 @@ legend("bottomleft", legend = c("Original Data", "IDK_one_node", "IDK_all_nodes"
     }
 
 
-    # Find the intersection point for the specific pc value:
+    # Find the intersection point for each specific pc value:
     intersection <- uniroot(function(x) one_IDK(x, pc) - original(x), interval = c(-1000, 1000))
     all_intersection_points_IDK_1_original[l] <- intersection$root
   }
@@ -1782,8 +1694,6 @@ all_intersection_points_IDK_1_original
 ```
 
 ```{r Intersection-FFT-handle-1-IDk}
-# Define the two functions: 
-
 # Initialize an empty vector to store the intersection points
   all_intersection_points_IDK_1_FFT_handle_breastcancer <- numeric(length(pcs))
 
@@ -1791,6 +1701,7 @@ all_intersection_points_IDK_1_original
   for (l in 1:length(pcs)) {
     pc <- pcs[l]
     
+# Define the two functions: 
 FFT_handle <-  function(x)  key_results$mn_hi[l] * cost_hi +
                       key_results$mn_mi[l] *  x * cost_hi +
                       key_results$mn_fa[l] *  x * cost_hi +
@@ -1818,20 +1729,20 @@ all_intersection_points_IDK_1_FFT_handle_breastcancer
 
 ```{r Intersection-original-all-IDk}
 
-# Initialize an empty vector to store the intersection points
+# Initialize an empty vector to store the intersection points:
   all_intersection_points_IDK_all_original <- numeric(length(pcs))
 
-  # Loop over each pc value
+  # Loop over each pc value:
   for (l in 1:length(pcs)) {
     pc <- pcs[l]
 
-    # Define the original and FFT_handle functions based on the given inputs:
+    # Define the original function based on the given inputs:
     original <- function(x) pc_original_table$`TRUE (reality) %`[1] * cost_hi +
       pc_original_table$`TRUE (reality) %`[2] * x * cost_hi +
       pc_original_table$`FALSE (reality) %`[1] * x * cost_hi +
       pc_original_table$`FALSE (reality) %`[2] * cost_cr
 
- # Define the all_IDK function with the specific pc value
+ # Define the all_IDK function with each specific pc value:
     all_IDK <- function(x, pc) {
       tables_all[[as.character(pc)]]$`TRUE (reality) %`[1] * cost_hi +
         tables_all[[as.character(pc)]]$`TRUE (reality) %`[2] * cost_IDK_hi +
@@ -1843,7 +1754,7 @@ all_intersection_points_IDK_1_FFT_handle_breastcancer
         tables_all[[as.character(pc)]]$`FALSE (reality) %`[4] * cost_cr
     }
 
-    # Find the intersection point for the specific pc value:
+    # Find the intersection point for each specific pc value:
     intersection <- uniroot(function(x) all_IDK(x, pc) - original(x), interval = c(-1000, 1000))
     all_intersection_points_IDK_all_original[l] <- intersection$root
   }
@@ -1851,10 +1762,10 @@ all_intersection_points_IDK_all_original
 ```
 
 ```{r Intersection-FFT-handle-all-IDk}
-# Initialize an empty vector to store the intersection points
+# Initialize an empty vector to store the intersection points:
   all_intersection_points_IDK_all_FFT_handle_breastcancer <- numeric(length(pcs))
 
-  # Loop over each pc value
+  # Loop over each pc value:
   for (l in 1:length(pcs)) {
     pc <- pcs[l]
     
@@ -1889,11 +1800,11 @@ all_intersection_points_IDK_all_FFT_handle_breastcancer
 
 ```{r compare-1-IDK-FFT-handle-false-decision-is-x}
 
-# plot both and a vertical line at 0, that is the cost of IDK decisions: ----
+# plot graph: ----
 plot(pcs, all_intersection_points_IDK_1_FFT_handle_titanic , type='o',lty=2,col='darkgreen',lwd=1, main = "Costs of False decisions, where when more expensive 1_IDK starts performing better than FFT_handle.")
 abline(h = 0, col='red',lty = 2)
 
-# Add the second line to the plot using the lines function:
+# Add several lines to the plot using the lines function:
 lines(pcs, all_intersection_points_IDK_1_FFT_handle_heartdisease, type = 'o', lty = 2, col = 'blue', lwd = 1)
 lines(pcs, all_intersection_points_IDK_1_FFT_handle_breastcancer, type = 'o', lty = 2, col = 'purple', lwd = 1)
 
@@ -1943,10 +1854,10 @@ intersection_point
 
 ```{r compare-all-IDK-FFT-handle}
 
-# plot both and a vertical line at 0, that is the cost of IDK decisions: ----
+# plot graph: ----
 plot(pcs, all_intersection_points_IDK_all_FFT_handle_titanic , type='o',lty=2,ylim = c(-6,2),col='darkgreen',lwd=1,  main = "Costs of False decisions, where when more expensive all_IDK starts performing better than FFT_handle.")
 
-# Add the second line to the plot using the lines function:
+# Add several lines to the plot using the lines function:
 lines(pcs, all_intersection_points_IDK_all_FFT_handle_heartdisease, type = 'o', lty = 2, col = 'blue', lwd = 1)
 lines(pcs, all_intersection_points_IDK_all_FFT_handle_breastcancer, type = 'o', lty = 2, col = 'purple', lwd = 1)
 
