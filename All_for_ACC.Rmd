@@ -122,7 +122,7 @@ loop_NA <- function(data, criterion, pc, x, fft_df, x_stats_1){
 
 # Prepare for loop:
   # Parameters:
-  n_per_NA <- 1
+  n_per_NA <- 5
   n_sims <- n_per_NA
 
 # initialize data structure to collect results:
@@ -254,9 +254,9 @@ loop_datasets <- function(several_data, data_names, several_criterion, several_p
     x <- FFTrees(formula = as.formula(paste(several_criterion[k],"~.")),
                  data = several_data[[k]],
                  main = name,
-                 goal = "bacc",
-                 goal.chase = "bacc",
-                 goal.threshold = "bacc")
+                 goal = "acc",
+                 goal.chase = "acc",
+                 goal.threshold = "acc")
 
     # Performance:
     x_summary <- summary(x)
@@ -308,9 +308,9 @@ loop_datasets <- function(several_data, data_names, several_criterion, several_p
 titanic.fft <- FFTrees(formula = survived ~ .,
                      data = titanic,
                      main = "titanic",
-                     goal = "bacc", 
-                     goal.chase = "bacc",
-                     goal.threshold = "bacc")
+                     goal = "acc", 
+                     goal.chase = "acc",
+                     goal.threshold = "acc")
 
 # define variables for further use:
 # define summary statistic:
@@ -728,9 +728,9 @@ all_intersection_points_IDK_all_FFT_handle_titanic
 heartdisease.fft <- FFTrees(formula = diagnosis ~ .,
                      data = heartdisease,
                      main = "heartdisease",
-                     goal = "bacc", 
-                     goal.chase = "bacc",
-                     goal.threshold = "bacc")
+                     goal = "acc", 
+                     goal.chase = "acc",
+                     goal.threshold = "acc")
 
 # define variables for further use:
 # define summary statistic:
@@ -1142,9 +1142,9 @@ all_intersection_points_IDK_all_FFT_handle_heartdisease
 breastcancer.fft <- FFTrees(formula = diagnosis ~ .,
                      data = breastcancer,
                      main = "breastcancer",
-                     goal = "bacc", 
-                     goal.chase = "bacc",
-                     goal.threshold = "bacc")
+                     goal = "acc", 
+                     goal.chase = "acc",
+                     goal.threshold = "acc")
 
 # define variables for further use:
 # define summary statistic:
@@ -1557,9 +1557,9 @@ all_intersection_points_IDK_all_FFT_handle_breastcancer
 fertility.fft <- FFTrees(formula = diagnosis ~ .,
                      data = fertility,
                      main = "fertility",
-                     goal = "bacc", 
-                     goal.chase = "bacc",
-                     goal.threshold = "bacc")
+                     goal = "acc", 
+                     goal.chase = "acc",
+                     goal.threshold = "acc")
 
 # define variables for further use:
 # define summary statistic:
@@ -1978,9 +1978,9 @@ all_intersection_points_IDK_all_FFT_handle_fertility
 contraceptive.fft <- FFTrees(formula = cont.crit ~ .,
                      data = contraceptive,
                      main = "contraceptive",
-                     goal = "bacc", 
-                     goal.chase = "bacc",
-                     goal.threshold = "bacc")
+                     goal = "acc", 
+                     goal.chase = "acc",
+                     goal.threshold = "acc")
 
 # define variables for further use:
 # define summary statistic:
@@ -2398,9 +2398,9 @@ all_intersection_points_IDK_all_FFT_handle_contraceptive
 iris.v.fft <- FFTrees(formula = virginica ~ .,
                      data = iris.v,
                      main = "iris.v",
-                     goal = "bacc", 
-                     goal.chase = "bacc",
-                     goal.threshold = "bacc")
+                     goal = "acc", 
+                     goal.chase = "acc",
+                     goal.threshold = "acc")
 
 # define variables for further use:
 # define summary statistic:
@@ -2818,9 +2818,9 @@ all_intersection_points_IDK_all_FFT_handle_iris.v
 mushrooms.fft <- FFTrees(formula = poisonous ~ .,
                      data = mushrooms,
                      main = "mushrooms",
-                     goal = "bacc", 
-                     goal.chase = "bacc",
-                     goal.threshold = "bacc")
+                     goal = "acc", 
+                     goal.chase = "acc",
+                     goal.threshold = "acc")
 
 # define variables for further use:
 # define summary statistic:
@@ -3238,9 +3238,9 @@ all_intersection_points_IDK_all_FFT_handle_mushrooms
 sonar.fft <- FFTrees(formula = mine.crit ~ .,
                      data = sonar,
                      main = "sonar",
-                     goal = "bacc", 
-                     goal.chase = "bacc",
-                     goal.threshold = "bacc")
+                     goal = "acc", 
+                     goal.chase = "acc",
+                     goal.threshold = "acc")
 
 # define variables for further use:
 # define summary statistic:
@@ -3658,9 +3658,9 @@ all_intersection_points_IDK_all_FFT_handle_sonar
 voting.fft <- FFTrees(formula = party.crit ~ .,
                      data = voting,
                      main = "voting",
-                     goal = "bacc", 
-                     goal.chase = "bacc",
-                     goal.threshold = "bacc")
+                     goal = "acc", 
+                     goal.chase = "acc",
+                     goal.threshold = "acc")
 
 # define variables for further use:
 # define summary statistic:
@@ -4078,7 +4078,7 @@ all_intersection_points_IDK_all_FFT_handle_voting
 ```{r compare-1-IDK-FFT-handle-false-decision-is-x-2}
 
 # plot graph:
-plot(pcs, all_intersection_points_IDK_1_FFT_handle_titanic , type='o',lty=2 ,col='darkgreen', ylim = c(-5,5),lwd=1,  xlab="Percentage of missing data", ylab="Costs of false decisions", main = "When x more expensive, one_IDK starts performing better than FFT_handle.")
+plot(pcs, all_intersection_points_IDK_1_FFT_handle_titanic , type='o',lty=2 ,col='darkgreen', ylim = c(-10,15),lwd=1,  xlab="Percentage of missing data", ylab="Costs of false decisions", main = "When x more expensive, one_IDK better than FFT_handle.")
 
 # Add several lines to the plot using the lines function:
 lines(pcs, all_intersection_points_IDK_1_FFT_handle_heartdisease, type = 'o', lty = 2, col = 'blue', lwd = 1)
@@ -4094,52 +4094,16 @@ lines(pcs, all_intersection_points_IDK_1_FFT_handle_voting, type = 'o', lty = 2,
 abline(h = 0, col = 'red', lty = 2)
 
 # Add a legend to the graph:
-#legend("topright", legend = c("titanic data", "heartdisease data", "breastcancer data", "fertility data", "contraceptive data", "iris.v data", "mushroom data", "sonar data", "voting data"), col = c("darkgreen", "blue", "purple", "dark red", "green", "orange", "yellow", "pink", "brown"), lty = 2)
-
-```
-
-```{r calculate-at-which-pc-missings-costs-of-false-decision-only-has-to-be-as-good-as-no-decision-for-fft-handle-to-have-lower-costs}
-
-# titanic: ----
-# Define the function for the line connecting the points:
-line_function <- function(x) {
-  approx(x = pcs, y = all_intersection_points_IDK_1_FFT_handle_titanic, xout = x)$y
-}
-
-# Find the intersection point with the vertical line:
-intersection <- uniroot(function(x) line_function(x), interval = range(pcs))
-intersection_point <- intersection$root
-intersection_point
+legend("topright", legend = c("titanic data", "heartdisease data", "breastcancer data", "fertility data", "contraceptive data", "iris.v data", "mushroom data", "sonar data", "voting data"), col = c("darkgreen", "blue", "purple", "dark red", "green", "orange", "yellow", "pink", "brown"), lty = 2)
 
 
-# heartdisease: ----
-# Define the function for the line connecting the points:
-line_function <- function(x) {
-  approx(x = pcs, y = all_intersection_points_IDK_1_FFT_handle_heartdisease, xout = x)$y
-}
-
-# Find the intersection point with the vertical line:
-intersection <- uniroot(function(x) line_function(x), interval = range(pcs))
-intersection_point <- intersection$root
-intersection_point
-
-# breastcancer: ----
-# Define the function for the line connecting the points:
-line_function <- function(x) {
-  approx(x = pcs, y = all_intersection_points_IDK_1_FFT_handle_breastcancer, xout = x)$y
-}
-
-# Find the intersection point with the vertical line:
-intersection <- uniroot(function(x) line_function(x), interval = range(pcs))
-intersection_point <- intersection$root
-intersection_point
 ```
 
 
 ```{r compare-all-IDK-FFT-handle}
 
 # plot graph:
-plot(pcs, all_intersection_points_IDK_all_FFT_handle_titanic , type='o',lty=2, ylim = c(-30,30),col='darkgreen',lwd=1,  xlab="Percentage of missing data", ylab="Costs of false decisions",  main = "When x more expensive all_IDK starts performing better than FFT_handle.")
+plot(pcs, all_intersection_points_IDK_all_FFT_handle_titanic , type='o',lty=2, ylim = c(-30,30),col='darkgreen',lwd=1,  xlab="Percentage of missing data", ylab="Costs of false decisions",  main = "When x more expensive, all_IDK better than FFT_handle.")
 
 # Add several lines to the plot using the lines function:
 lines(pcs, all_intersection_points_IDK_all_FFT_handle_heartdisease, type = 'o', lty = 2, col = 'blue', lwd = 1)
@@ -4156,4 +4120,6 @@ abline(h = 0, col='red',lty = 2)
 
 # Add a legend to the graph:
 legend("topright", legend = c("titanic data", "heartdisease data", "breastcancer data", "fertility data", "contraceptive data", "iris.v data", "mushroom data", "sonar data", "voting data"), col = c("darkgreen", "blue", "purple", "dark red", "green", "orange", "yellow", "pink", "brown"), lty = 2)
+
+
 ```
