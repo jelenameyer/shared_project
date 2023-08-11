@@ -2,119 +2,125 @@
 title: "Summary"
 author: "JM and HN"
 date: "2023-08-11"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 # What we have done so far:
 
-## Theory: 
+## Fragmented theoretical background: 
 
-First Part:
-Comparing fast and frugal heuristics with other decision algorithms shows that they often yield predictions as accurate as those from less frugal algorithms in uncertain environments (Phillips et al., 2017).
+##### Topic one (discussed in this summary):
 
-We hypothesize that the frugal nature of FFTrees confers a comparative advantage in handling incomplete data sets, making it robust in dealing with real-world uncertainties (Gigerenzer & Gaissmaier, 2011). This becomes especially relevant considering the consistent presence of uncertainty in everyday life.
-compare with meaning of original:
-We hypothesize that due to it's *frugal nature* the comparative advantage of FFTrees lies in its robustness when dealing with incomplete data sets. This seems especially relevant because real-life examples in one's everyday live show consistently that the world is uncertain (Gigerenzer & Gaissmaier, 2011).
+When assessing decision algorithms one must consider whether making a decision at all is advisable. For instance, in scenarios where the consequences of incorrect decisions are substantial, it might be more prudent not to make a decision or categorize cases with missing information regarding critical predictors.
 
-Second Part:
-Furthermore, it is crucial to consider whether making a decision is appropriate in certain cases. For instance, in scenarios where the consequences of incorrect decisions are substantial, it might be more prudent not to make a decision or categorize cases with missing information on critical predictors.
+Measuring the effectiveness of potential decision rules is achieved most effectively by calculating expected costs. 
 
-The performance of potential decision structures/rules can be most effectively measured by calculating expected costs. 
+To explore situations where not making a decision may be preferable to deciding under uncertainty, we conducted a comparative analysis of FFTrees' performance under four conditions: handling complete information, handling incomplete information with the FFTrees package, and utilizing two strategies of not-deciding in analogous scenarios.
 
-To assess our hypotheses and explore situations where not making a decision may be preferable to deciding under uncertainty, we conducted a comparative analysis of FFTrees' performance under four conditions: handling complete information, handling incomplete information with the FFTrees package, and employing two strategies of not-deciding in similar scenarios.
+
+##### Topic two (Will hopefully be investigated in the future):
+
+Comparisons between fast and frugal heuristics and other decision algorithms have demonstrated that in uncertain environments, the former often yield predictions as accurate as those from less frugal algorithms (Phillips et al., 2017).
+
+We hypothesize that the frugal nature of FFTrees confers a comparative advantage in handling incomplete data sets, making it robust in dealing with real-world uncertainties (Gigerenzer & Gaissmaier, 2011). This is particularly relevant given the persistent presence of uncertainty in everyday life.
 
 In future research, we aim to delve deeper into how various algorithms handle similar amounts of missing data and determine which algorithm demonstrates the highest level of robustness in such circumstances.
 
-
 ## Tools:
-Aside from using the basic R package "FFTrees", the basic functions "replace_values", "loop_NA", "loop_pc" and "loop_datasets" were developed in order to add defined percentages of NAs to a specific variables of multiple datasets. Also then the best FFTree of the original dataset is applied to several randomly developed "NA-datasets" and it is tested how well the criterion is predicted on average.
+Aside from using the R package "FFTrees", the functions "replace_values", "loop_NA", "loop_pc" and "loop_datasets" were developed in order to randomly add defined percentages of NAs to specific variables of multiple data sets. Also, then the best FFTree of the original data set is applied to several randomly developed "NA-data sets" and it is tested how well the criterion is predicted on average with a given percentage of NAs.
 
 ## Method:
-For this first part (investigating the "I don't know" option), we calculated the performance of FFTrees algorithms for multiple data sets. We got the original best tree and further used it for all investigations.
+Regarding topic one, we computed the performance of FFTrees algorithms across multiple data sets, utilizing the original best tree for all subsequent investigations.
 
-We then investigated the performance of a "one_IDK" option, that would classify all cases as "I don't know" that had missings in all nodes of the "best tree". (Calculation to determine the number of "IDK" cases: percentage <- pc^nodes)
+We then investigated the performance of a "one_IDK" option, that would classify all cases as "I don't know" that had missings in all nodes of the "best tree". (Calculation to determine the number of "IDK" cases: percentage <- pc of  NAs^nodes)
 
-We further had a look on the performance of the "all_IDK" option which would decide "I don't know for a case as soon as there was a missing value in any of the variables used at the nodes. (Calculation to determine the number of "IDK" cases: percentage <- pc + (1 - pc) * pc + (1 - pc) * (1 - pc) * pc)
+We further had a look on the performance of the "all_IDK" option which would decide "I don't know" for a case as soon as there was a missing value in any of the variables used at the nodes. (Calculation to determine the number of "IDK" cases: percentage <- pc + (1 - pc) * pc + (1 - pc) * (1 - pc) * pc)
 
-Finally we determied the performance of our classic way of handling missings within the FFTree algorithm. 
+Lastly, we assessed the performance of our conventional approach to managing missing data within the FFTree algorithm. 
 
-All performance where compared for their costs: Costs of a right decision were constant with -1. Costs of an "IDK" were constant with 0 and costs of a wrong decision was a variable that was allowed to vary.
+All performances were compared for their costs: Costs of a right decision were held constant with -1. Costs of an "IDK" were held constant with 0 and costs of a wrong decision were the x-variable that was allowed to vary.
 
-The functions of costs for every method would than be compared (points of intersection were determined) and displayed in a graph for different data sest and different percentages of NAs:
+The functions of costs for every method were than compared (points of intersection were determined) and displayed in a graph for different data sets and different percentages of NAs:
+
+Example for the data set "titanic".
+
+![Graph 1: Example for 50% missings in titanic data. Total costs for different procedures depended on the relationship of costs of correct to false decisions (false = -x * correct decision).](graphs/diff_procedures_compare.jpg)
 
 We optimized for accuracy.
 
 ## Results:
 
 1. Comparing "one_IDK" performance with the performance of the FFT algorithm. 
-The x- axis shows the percentage of missing data in each data set, the y-axis displays the costs of wrong decisions (x * -1, meaning: the costs of false decisions have to be x times more bad than correct decisions for the performance to be better/worse than not deciding). The different colours stand for the multiple data sets.
+The x-axis shows the percentage of missing data in each data set, the y-axis displays the costs of wrong decisions (x * -1, meaning: the costs of false decisions have to be x times as bad as correct decisions for the performance to be better/worse than not deciding). Distinct colours represent different data sets.
 
 
-![Graph 1: Overview. one IDK.](graphs/acc_one_IDK_overview.jpg)
+![Graph 2: Overview. one IDK.](graphs/acc_one_IDK_overview.jpg)
 
-![Graph 2: Details. one IDK.](graphs/acc_one_IDK_see_better.jpg)
+![Graph 3: Details. one IDK.](graphs/acc_one_IDK_see_better.jpg)
 
 #### Interpretation: 
 
 We have not yet figured out why the performance curve seems to behave quite similar between some, and really different in between other data sets. 
 Maybe we can investigate that with correlative calculations between approximated curves of data set performances and multiple variables that could theoretically predict the shape of the performance curve.
 
-Apart from the uncertainty our general take is: 
-
 
 2. Comparing "all_IDK" performance with the performance of the FFT algorithm. 
-The same explanation hold for this graph.
+The same explanation holds for this graph.
 
-![Graph 3: Overview. all IDK.](graphs/acc_all_IDK_overview.jpg)
+![Graph 4: Overview. all IDK.](graphs/acc_all_IDK_overview.jpg)
 
-![Graph 4: Details. all IDK.](graphs/acc_all_IDK_better_see.jpg)
+![Graph 5: Details. all IDK.](graphs/acc_all_IDK_better_see.jpg)
 
 #### Interpretation:
 
-
-In total we see, ...
-
+Again, we see a similar pattern. In general, most data sets perform similarly while a few show wildly different patterns. Explanations will hopefully follow.
 
 
-Comparing it with performance when optimizing for bacc: 
-
-In comparison, ...
+Interpreting the results, it seems that the all_IDK performs worse than the FFT algorithm in all common sense cases. 
+(With common sense, we mean the relationship of costs).
+In contrast, not deciding when all predictive variables are missing for a case seems to produce better performances on average for common sense cases. 
+Interestingly, the trends of how a bigger percentage of NAs in the data sets influences the performance comparison is antidromic in both cases: The one_IDK case, performs much better than FFT if there is a small percentage of NAs and its comparative advantage shrinks with bigger amounts of NAs, whereas the all_IDK option performance comparatively poorly for small percentages of NAs and improves comparatively with bigger percentages of NAs. It does however never outperform the other options (in common sense scenarios).
+Still, keep in mind that these observations vary greatly in between data sets due to not yet known factors.
 
 ## Discussion:
 
-### What we think now:
+To further deploy FFTrees algorithms in dichotomous decisions, it should be considered whether a possibility to not decide when all data is missing in the decisive variables should be added. In some cases the data hints that this could yield cheaper total decision costs on average for some data sets.
 
-
-
-### Should a possibility to not decide when all data is missing in all variables be added?
-
-Interpreting the results, it seems that the all_IDK performs worse that the FFT algorithm in all common sense cases.
-In contrast, not deciding when all predictive variables are missing for a case seems to produce better performances on average as soon as the costs for a wrong decision are: ...
-Although it has to be kept in mind that the variance of this number varies greatly in between data sets due to not yet known factors. Consequently it should be decided data set dependent whether missing data with a certain percentage of missings should be categorized or not.
-(unsatisfying answer!)
 
 ## Future research:
 
-### What we will investigate further:
+Topic one:
 
-- We will find out how other decision algorithms cope with missing data.
-- Next, we will compare the performance of the different algorithms when calibrated on a complete data set and then tested with different percentages of missing data. 
-- We hypothesize that FFTrees is more robust in its performance than the other algorithms. 
+- We will attempt to comprehend the patterns governing the varying efficacy of different decision rules, whether involving deciding or not deciding, across diverse data sets with distinct characteristics.
+
+- We could compare performances when optimizing for bacc.
+
+Topic two:
+
+- We will investigate how alternative decision algorithms handle missing data.
+
+- Next, we will compare the performance of different algorithms when calibrated on complete data sets and subsequently tested with varying percentages of missing data.
+
+- We hypothesize that FFTrees exhibit greater robustness in performance compared to other algorithms. 
 
 
 
 ### Further explorations which we did, but which were not included in this summary: 
 
-- Testing for performance when allowing for compensation, i.e. allowing FFTrees to build a better fitting tree when data is missing.
-This consistently showed a better performance but was not further investigated since it likely cannot be used in real life easily (when data is missing, criterion might not be known).
+- Examining performance when permitting compensation—allowing FFTrees to construct a more suitable tree in the presence of missing data.
+This consistently showed a better performance but was not further investigated since it likely cannot be used in real life easily (when data is missing, criterion for good fitting might not be known).
 
 - Exploring the performance loss with increasing percentages of missings.
-Plot mean results (all used data sets):
+
+Here, we depict the mean results from all utilized data sets:
+
 Example which shows the normalized results of three data sets (heartdisease, titanic, breastcancer).
 
-![Graph 5: Normalized mean accuracy, dependent on pc NA.](graphs/meanacc.jpg)
+![Graph 6: Normalized mean accuracy, dependent on pc NA in the data sets.](graphs/meanacc.jpg)
 
-![Graph 6: Normalized mean frugality, dependent on pc NA.](graphs/meanfrugality.jpg)
+![Graph 7: Normalized mean frugality, dependent on pc NA in the data sets.](graphs/meanfrugality.jpg)
 
 
 
