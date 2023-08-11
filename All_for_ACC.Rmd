@@ -14,7 +14,7 @@ library(dplyr)
 ```{r define-costs-and-pc-missing}
 # Variables needed: 
 # Define x: 
-x <- seq(-20, 1, length.out = 100)
+x <- seq(-10, 1, length.out = 100)
 
 # costs could e.g. be:
 cost_hi <- (-1)
@@ -122,7 +122,7 @@ loop_NA <- function(data, criterion, pc, x, fft_df, x_stats_1){
 
 # Prepare for loop:
   # Parameters:
-  n_per_NA <- 5
+  n_per_NA <- 10
   n_sims <- n_per_NA
 
 # initialize data structure to collect results:
@@ -239,7 +239,7 @@ loop_datasets <- function(several_data, data_names, several_criterion, several_p
   baseline_pc <- numeric(n)
 
   
-  # Initialize two nummeric vectors to store results of Baseline-pc:
+  # Initialize two numeric vectors to store results of Baseline-pc:
   bl <- numeric(n)
   pred_benchmark <- numeric(n)
   
@@ -569,8 +569,8 @@ handle_NA_costs <- key_results$mn_hi[l] * cost_hi +
                       key_results$mn_cr[l] * cost_cr
 
 # Plot the graph with multiple y variables: ----
-plot(x, original_costs, type = "l",ylim = c(-2,2), col = "red", xlab = "costs false decisions (x * correct decisions)", ylab = "Costs",
-main =paste0("Total costs depending on the relationship from costs of false to correct decisions.Missing pcs:", pc))
+plot(x, original_costs, type = "l",ylim = c(-2,2), col = "red", xlab = "costs false decisions (x * correct decisions)", ylab = "Total costs",
+main =paste0("Costs dep. on the rel. costs of false to correct decisions. Missing pc:", pc))
 lines(x, IDK_1, col = "darkgreen")
 lines(x, IDK_all, col = "green")
 lines(x, handle_NA_costs, col = "orange")
