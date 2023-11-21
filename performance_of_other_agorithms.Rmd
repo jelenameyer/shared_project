@@ -1,13 +1,24 @@
+---
+title: "performance_of_other_algorithms"
+author: "Jelena Meyer and Hansjörg Neth"
+date: "2023-11-10"
+output: html_document
+---
+```{r}
 require(stats)
+require(FFTrees)
+```
 
 # build regression algorithm with whole dataset
 
-require(FFTrees)
-View(titanic)
-model <- glm(survived ~.,family=binomial(link='logit'),data=titanic)
+```{r}
+#View(titanic)
+model <- glm(survived ~., data=titanic, family="binomial")
 summary(model)
-names(titanic)
+```
 
+# get accuracy statistic
+```{r}
 # build algorithm:
 reg_log <- predict(model, titanic, type = 'response')
 class_pred <- ifelse(reg_log > 0.5, 1, 0)
@@ -18,10 +29,10 @@ print(confusion_matrix)
 # calculate accuracy
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
 print(accuracy)
-
-
+```
 # add missing data (use methods that have been built before)
 
+```{r}
 ## therefore include function that adds NAs in dataset:
 ### Define Loop functions (for multiple simulations): ----
 replace_values <- function(data, cols, amount, replacement = NA, levels_amount = NULL) {
@@ -103,11 +114,27 @@ replace_values <- function(data, cols, amount, replacement = NA, levels_amount =
     return(data) # as data frame.
 
   } # replace_values().
+```
 
-titanic_20_NA <-replace_values(data = titanic, cols = c("class",    "age" ,     "sex" ,     "survived"), amount = c(0.20, 0.20, 0.20, 0.20), replacement = NA, levels_amount = NULL)
+```{r}
+titanic_20_NA <-replace_values(data = titanic, cols = c("class",    "age" ,     "sex"), amount = c(0.20, 0.20, 0.20), replacement = NA, levels_amount = NULL)
+```
 
+
+```{r}
 # calculate log_reg with missing data
 
+# alternative: 
+# using default, which will include data anyway
+# Ordinary regression with listwise exclusion of missing data
+reg.fit <- glm(survived ~., data=titanic_20_NA)
+summary(reg.fit)
+```
+
+
+```{r}
+# or:
+  
 # build algorithm with listwise deletion (default):
 reg_log_20_NA <- predict(model, titanic_20_NA, type = 'response')
 class_pred_20_NA <- ifelse(reg_log_20_NA > 0.5, 1, 0)
@@ -119,14 +146,88 @@ print(confusion_matrix_20_NA)
 accuracy_20_NA <- sum(diag(confusion_matrix_20_NA)) / sum(confusion_matrix_20_NA)
 print(accuracy_20_NA) # so gehts nicht einfach, weill dann einfach nur alle NAs rausgeschmissen und nicht mehr vorhergesagt werden und die accuracy als Konsequenz tatsächlich hochgeht!
 
+```
+
 # somehow handle NA data in some way to be able to use log reg on the new datasets
-# imputation?
+
+# imputation
+```{r}
 require(mice)
-mice(data = titanic_20_NA)
 
-# somehow run the algorithm log reg on those datasets and get accuracy performance!
-# see above, maybe simply implement it like this!
+# convert character variables into factor
+titanic_20_NA <- data.frame(lapply(titanic_20_NA, function(x) if(is.character(x)) as.factor(x) else x))
+
+```
+
+```{r}
+# having a look at imputed data
+summary(titanic_20_NA)
+str(titanic_20_NA) #important: factor variables defined as factors!
+md.pattern(titanic_20_NA)
+
+```
+
+```{r}
+
+# Multiple Imputation with the mice package
+#=========================================
+
+# 1. Imputation
+
+imp.data <- mice (data = titanic_20_NA, m = 20, maxit = 10, seed = 123, print=FALSE)
+
+# Which methods were used?
+imp.data
+#====================================================
+
+# Checking if convergence was achieved
+plot(imp.data)
+
+# 2. Regression for each imputed data set
+
+reg.fit.mi <- with(imp.data, glm(survived ~class + age + sex,   family = "binomial"))
+reg.fit.mi
+
+
+# 3. Pooling the results
+pool.fit <- pool(reg.fit.mi)
+summary(pool.fit)
+
+
+```
+
+
+# get accuracy performance!
+
+```{r}
+# Apply the logistic regression model to each imputed data set
+predictions <- lapply(1:20, function(m) {
+  dataset <- complete(imp.data, m)
+  predict(model, new_data = dataset, type = "response")
+})
+
+# Average the predictions
+avg_predictions <- Reduce("+", predictions) / 20
+
+# Create binary classification
+class_pred_imputed <- ifelse(avg_predictions > 0.5, 1, 0)
+
+# Assuming you have the actual survival data in a vector named 'actual_survived'
+confusion_matrix_imputed <- table(Predicted = class_pred_imputed, Actual = titanic$survived)
+print(confusion_matrix_imputed)
+
+# Calculate accuracy
+accuracy_imputed <- sum(diag(confusion_matrix_imputed)) / sum(confusion_matrix_imputed)
+print(accuracy_imputed)
+
+```
 
 
 
-# compare performance on different NA percentages with the performance of other algorithms
+
+
+
+
+
+# compare performance of best log reg NA handling method on different NA percentages with the performance of other algorithms
+
