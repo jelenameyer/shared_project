@@ -1,5 +1,5 @@
 ---
-title: "breastcancer_alg_comparison"
+title: "Heartdisease_alg_comparison"
 author: "Jelena Meyer and Hansjörg Neth"
 date: "2023-11-15"
 output: html_document
@@ -13,20 +13,20 @@ require(FFTrees)
 # divide data into 50% train and test data:
 ```{r}
 
-nrow(breastcancer)
+nrow(heartdisease)
 
 # set seed for reproducability
 set.seed(123)
 
 # take 50% of rows of df and build fitting df
-heart_fit_indices <- sample(nrow(breastcancer), 0.5 * nrow(breastcancer), replace = FALSE)
-heart_fit <- breastcancer[heart_fit_indices,]
+heart_fit_indices <- sample(nrow(heartdisease), 0.5 * nrow(heartdisease), replace = FALSE)
+heart_fit <- heartdisease[heart_fit_indices,]
 nrow(heart_fit)
 
 
 # find remaining rows and put into predicting df
-heart_predict_indices <- setdiff(1:nrow(breastcancer), heart_fit_indices)
-heart_predict <- breastcancer[heart_predict_indices,]
+heart_predict_indices <- setdiff(1:nrow(heartdisease), heart_fit_indices)
+heart_predict <- heartdisease[heart_predict_indices,]
 nrow(heart_predict)
 
 
@@ -37,17 +37,17 @@ nrow(heart_predict)
 
 
 
-# build regression algorithm with whole dataset
+# build regression algorithm with whole dataset:
 
 ```{r}
 model <- glm(diagnosis ~ ., data=heart_fit, family="binomial")
 summary(model)
 ```
 
-```{r}
 
 # see how good log reg is with fitted data:
 
+```{r}
 # build algorithm:
 reg_log <- predict(model, heart_fit, type = 'response')
 class_pred <- ifelse(reg_log > 0.5, 1, 0)
@@ -62,8 +62,9 @@ print(accuracy)
 
 
 # get accuracy statistic
-```{r}
 # see how good log reg predicts new data
+
+```{r}
 # build algorithm:
 reg_log <- predict(model, heart_predict, type = 'response')
 class_pred <- ifelse(reg_log > 0.5, 1, 0)
@@ -75,6 +76,7 @@ print(confusion_matrix)
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
 print(accuracy)
 ```
+
 # add missing data (use methods that have been built before)
 
 ```{r}
@@ -163,7 +165,7 @@ replace_values <- function(data, cols, amount, replacement = NA, levels_amount =
 
 ```{r}
 # Preparations:
-
+pc <- 0.6
 # get all names of variables but exclude criterion: 
 column_names_heart <- colnames(heart_fit)
 column_names_heart <- column_names_heart[column_names_heart != 'diagnosis']
@@ -171,16 +173,15 @@ column_names_heart <- column_names_heart[column_names_heart != 'diagnosis']
 
 # in total xx% should be NAs in the end, split equally over all variables: 
 num_columns <- length(column_names_heart)
-pc_per_row_20 <- 0.20
+pc_per_row_20 <- pc
 
 # create vector with that pc for number of rows:
 pc_vector_20 <- rep(pc_per_row_20, times = num_columns)
 
-# apply replace_values function and thereby create new data frame:
-
 # set seed for being able to replicate results:
+set.seed(123)
 
-# 20% NAs in data set:
+# apply replace_values function and thereby create new data frame:
 heart_NA_20 <- replace_values(data = heart_predict, cols = column_names_heart, amount = pc_vector_20)
 
 ```
@@ -223,7 +224,7 @@ str(heart_NA_20)
 # 1. Imputation
 imp.data <- mice (data = heart_NA_20, m = 20, maxit = 10, seed = 123, print=FALSE)
 # Which methods were used?
-imp.data
+#imp.data
 # Checking if convergence was achieved
 #plot(imp.data)
 # 2. Regression for each imputed data set
@@ -240,18 +241,18 @@ imp.data
 
 ```{r}
 # Apply the logistic regression model to each imputed data set
-predictions <- lapply(1:20, function(m) {
+predictions <- lapply(1:pc, function(m) {
   dataset <- complete(imp.data, m)
   predict(glm(diagnosis ~., family = "binomial", data = dataset), type = "response")
 })
 
 # Average the predictions
-avg_predictions <- Reduce("+", predictions) / 20
+avg_predictions <- Reduce("+", predictions) / pc
 
 # Create binary classification
 class_pred_imputed <- ifelse(avg_predictions > 0.5, 1, 0)
 
-# Assuming you have the actual survival data in a vector named 'actual_survived'
+# create confusion matrix
 confusion_matrix_imputed <- table(Predicted = class_pred_imputed, Actual = heart_predict$diagnosis)
 print(confusion_matrix_imputed)
 
@@ -260,6 +261,9 @@ accuracy_imputed <- sum(diag(confusion_matrix_imputed)) / sum(confusion_matrix_i
 print(accuracy_imputed)
 
 ```
+
+
+# compare performance of best log reg NA handling method on different NA percentages with the performance of other algorithms
 
 ```{r}
 # without NAs, baseline performance for train data:
@@ -280,7 +284,6 @@ plot(heart.fft, data = "train")
 
 
 
-# compare performance of best log reg NA handling method on different NA percentages with the performance of other algorithms
 ```{r}
 # without NAs, baseline performance for test data:
 
@@ -303,8 +306,6 @@ plot(heart.fft, data = "test")
 ```{r}
 
 # with 20% NAs:
-
-
 # build best tree. 20% NAs (standard function)
 heart.fft_NA_20 <- FFTrees(formula = diagnosis ~.,
                            data = heart_fit,
@@ -319,4 +320,46 @@ heart.fft_NA_20$trees$level_stats$train[ , tree_level_outcome_vars]
   
 plot(heart.fft_NA_20, data = "test")
 ```
+
+
+```{r}
+
+# Creating a single imputed dataset
+# You can use the 'complete' function from mice with "long" option to stack all imputed datasets
+long_data <- complete(imp.data, "long")
+# Calculate the mean of imputed values for each variable
+aggregated_data <- aggregate(. ~ .imp + .id, data = long_data, FUN = mean)
+
+# Now remove the .imp and .id columns to get the final dataset
+final_imputed_data <- aggregated_data[, !(names(aggregated_data) %in% c(".imp", ".id"))]
+
+
+# change heart_fit to same types variables as imputed data
+heart_fit_types_dif <- data.frame(lapply(heart_fit, function(x) if(is.character(x)) as.numeric(x) else x))
+
+# convert  criterion back into logical
+final_imputed_data$diagnosis <- as.logical(final_imputed_data$diagnosis == 1)
+heart_fit_types_dif$diagnosis <- as.logical(heart_fit_types_dif$diagnosis == 1)
+
+
+# Using the final imputed data to train FFTrees
+# Assuming 'heart_fit' is your training data and 'final_imputed_data' is your test data
+heart.fft <- FFTrees(formula = diagnosis ~ .,
+                     data = heart_fit_types_dif,
+                     data.test = final_imputed_data,
+                     main = "Heart Disease",
+                     decision.labels = c("Healthy", "Diseased"))
+
+# Now you can analyze the FFTrees model
+print(heart.fft)
+# And you can plot it
+plot(heart.fft, data = "test")
+str(final_imputed_data)
+str(heart_fit_types_dif)
+
+```
+
+
+
+
 

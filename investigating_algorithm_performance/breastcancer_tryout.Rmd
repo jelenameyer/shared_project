@@ -1,5 +1,5 @@
 ---
-title: "Heartdisease_alg_comparison"
+title: "breastcancer_alg_comparison"
 author: "Jelena Meyer and Hansjörg Neth"
 date: "2023-11-15"
 output: html_document
@@ -13,47 +13,43 @@ require(FFTrees)
 # divide data into 50% train and test data:
 ```{r}
 
-nrow(heartdisease)
+nrow(breastcancer)
 
 # set seed for reproducability
 set.seed(123)
 
 # take 50% of rows of df and build fitting df
-heart_fit_indices <- sample(nrow(heartdisease), 0.5 * nrow(heartdisease), replace = FALSE)
-heart_fit <- heartdisease[heart_fit_indices,]
-nrow(heart_fit)
+breastcancer_fit_indices <- sample(nrow(breastcancer), 0.5 * nrow(breastcancer), replace = FALSE)
+breastcancer_fit <- breastcancer[breastcancer_fit_indices,]
+nrow(breastcancer_fit)
 
 
 # find remaining rows and put into predicting df
-heart_predict_indices <- setdiff(1:nrow(heartdisease), heart_fit_indices)
-heart_predict <- heartdisease[heart_predict_indices,]
-nrow(heart_predict)
+breastcancer_predict_indices <- setdiff(1:nrow(breastcancer), breastcancer_fit_indices)
+breastcancer_predict <- breastcancer[breastcancer_predict_indices,]
+nrow(breastcancer_predict)
 
 
 ```
-
-
-
 
 
 
 # build regression algorithm with whole dataset
 
 ```{r}
-model <- glm(diagnosis ~ ., data=heart_fit, family="binomial")
+model <- glm(diagnosis ~ ., data=breastcancer_fit, family="binomial")
 summary(model)
 ```
 
-```{r}
-
 # see how good log reg is with fitted data:
 
+```{r}
 # build algorithm:
-reg_log <- predict(model, heart_fit, type = 'response')
+reg_log <- predict(model, breastcancer_fit, type = 'response')
 class_pred <- ifelse(reg_log > 0.5, 1, 0)
 
 # get confusion matrix
-confusion_matrix <- table(Predicted = class_pred, Actual = heart_fit$diagnosis)
+confusion_matrix <- table(Predicted = class_pred, Actual = breastcancer_fit$diagnosis)
 print(confusion_matrix)
 # calculate accuracy
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
@@ -61,15 +57,15 @@ print(accuracy)
 ```
 
 
-# get accuracy statistic
-```{r}
 # see how good log reg predicts new data
+
+```{r}
 # build algorithm:
-reg_log <- predict(model, heart_predict, type = 'response')
+reg_log <- predict(model, breastcancer_predict, type = 'response')
 class_pred <- ifelse(reg_log > 0.5, 1, 0)
 
 # get confusion matrix
-confusion_matrix <- table(Predicted = class_pred, Actual = heart_predict$diagnosis)
+confusion_matrix <- table(Predicted = class_pred, Actual = breastcancer_predict$diagnosis)
 print(confusion_matrix)
 # calculate accuracy
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
@@ -165,37 +161,35 @@ replace_values <- function(data, cols, amount, replacement = NA, levels_amount =
 # Preparations:
 
 # get all names of variables but exclude criterion: 
-column_names_heart <- colnames(heart_fit)
-column_names_heart <- column_names_heart[column_names_heart != 'diagnosis']
+column_names_breastcancer <- colnames(breastcancer_fit)
+column_names_breastcancer <- column_names_breastcancer[column_names_breastcancer != 'diagnosis']
 
 
 # in total xx% should be NAs in the end, split equally over all variables: 
-num_columns <- length(column_names_heart)
-pc_per_row_20 <- 0.20
+num_columns <- length(column_names_breastcancer)
+pc_per_row_20 <- 0.80
 
 # create vector with that pc for number of rows:
 pc_vector_20 <- rep(pc_per_row_20, times = num_columns)
 
-# apply replace_values function and thereby create new data frame:
-
 # set seed for being able to replicate results:
+set.seed(1313)
 
-# 20% NAs in data set:
-heart_NA_20 <- replace_values(data = heart_predict, cols = column_names_heart, amount = pc_vector_20)
+# apply replace_values function and thereby create new data frame:
+breastcancer_NA_20 <- replace_values(data = breastcancer_predict, cols = column_names_breastcancer, amount = pc_vector_20)
 
 ```
 
 
-
-```{r}
 # first alternative: LISTWISE DELETION
 
+```{r}
 # predict NA data with old model
-reg_log_20_NA <- predict(model, heart_NA_20, type = 'response')
+reg_log_20_NA <- predict(model, breastcancer_NA_20, type = 'response')
 confusion_matrix_20_NA <- ifelse(reg_log_20_NA > 0.5, 1, 0)
 confusion_matrix_20_NA
 # get confusion matrix
-confusion_matrix_20_NA <- table(Predicted = class_pred_20_NA, Actual = heart_predict$diagnosis)
+confusion_matrix_20_NA <- table(Predicted = confusion_matrix_20_NA, Actual = breastcancer_predict$diagnosis)
 print(confusion_matrix_20_NA)
 # calculate accuracy
 accuracy_20_NA <- sum(diag(confusion_matrix_20_NA)) / sum(confusion_matrix_20_NA)
@@ -208,12 +202,10 @@ print(accuracy_20_NA) # so gehts nicht einfach, weill dann einfach nur alle NAs 
 # imputation
 ```{r}
 require(mice)
-str(heart_NA_20) 
-
+#str(breastcancer_NA_20) 
 # convert character variables into factor
-heart_NA_20 <- data.frame(lapply(heart_NA_20, function(x) if(is.character(x)) as.factor(x) else x))
-
-str(heart_NA_20) 
+breastcancer_NA_20 <- data.frame(lapply(breastcancer_NA_20, function(x) if(is.character(x)) as.factor(x) else x))
+#str(breastcancer_NA_20) 
 ```
 
 
@@ -221,9 +213,9 @@ str(heart_NA_20)
 
 # Multiple Imputation with the mice package
 # 1. Imputation
-imp.data <- mice (data = heart_NA_20, m = 20, maxit = 10, seed = 123, print=FALSE)
+imp.data <- mice (data = breastcancer_NA_20, m = 20, maxit = 10, seed = 123, print=FALSE)
 # Which methods were used?
-imp.data
+#imp.data
 # Checking if convergence was achieved
 #plot(imp.data)
 # 2. Regression for each imputed data set
@@ -242,7 +234,7 @@ imp.data
 # Apply the logistic regression model to each imputed data set
 predictions <- lapply(1:20, function(m) {
   dataset <- complete(imp.data, m)
-  predict(glm(diagnosis ~age+sex+cp+trestbps+chol+fbs+restecg+thalach+exang+oldpeak+slope+ca+thal, family = "binomial", data = dataset), type = "response")
+  predict(glm(diagnosis ~., family = "binomial", data = dataset), type = "response")
 })
 
 # Average the predictions
@@ -251,8 +243,8 @@ avg_predictions <- Reduce("+", predictions) / 20
 # Create binary classification
 class_pred_imputed <- ifelse(avg_predictions > 0.5, 1, 0)
 
-# Assuming you have the actual survival data in a vector named 'actual_survived'
-confusion_matrix_imputed <- table(Predicted = class_pred_imputed, Actual = heart_predict$diagnosis)
+# get confusion matrix
+confusion_matrix_imputed <- table(Predicted = class_pred_imputed, Actual = breastcancer_predict$diagnosis)
 print(confusion_matrix_imputed)
 
 # Calculate accuracy
@@ -261,62 +253,61 @@ print(accuracy_imputed)
 
 ```
 
+
+# compare performance of best log reg NA handling method on different NA percentages with the performance of other algorithms
+
 ```{r}
 # without NAs, baseline performance for train data:
 
 # build best tree. (standard function)
-heart.fft <- FFTrees(formula = diagnosis ~.,
-                           data = heart_fit,
-                           main = "Heart Disease",
+breastcancer.fft <- FFTrees(formula = diagnosis ~.,
+                           data = breastcancer_fit,
+                           main = "breastcancer Disease",
                            decision.labels = c("Healthy", "Diseased"))
 
 
 # Report on NA cases: 
 tree_level_outcome_vars <- c(1:3, 7:12, 25:30)
-heart.fft$trees$level_stats$train[ , tree_level_outcome_vars]
+breastcancer.fft$trees$level_stats$train[ , tree_level_outcome_vars]
   
-plot(heart.fft, data = "train")
+plot(breastcancer.fft, data = "train")
 ```
 
 
 
-# compare performance of best log reg NA handling method on different NA percentages with the performance of other algorithms
 ```{r}
 # without NAs, baseline performance for test data:
 
 # build best tree. (standard function)
-heart.fft <- FFTrees(formula = diagnosis ~.,
-                           data = heart_fit,
-                           data.test =  heart_predict,
-                           main = "Heart Disease",
+breastcancer.fft <- FFTrees(formula = diagnosis ~.,
+                           data = breastcancer_fit,
+                           data.test =  breastcancer_predict,
+                           main = "breastcancer Disease",
                            decision.labels = c("Healthy", "Diseased"))
 
 
 # Report on NA cases: 
 tree_level_outcome_vars <- c(1:3, 7:12, 25:30)
-heart.fft$trees$level_stats$test[ , tree_level_outcome_vars]
+breastcancer.fft$trees$level_stats$test[ , tree_level_outcome_vars]
   
-plot(heart.fft, data = "test")
+plot(breastcancer.fft, data = "test")
 ```
 
 
 ```{r}
 
-# with 20% NAs:
-
-
 # build best tree. 20% NAs (standard function)
-heart.fft_NA_20 <- FFTrees(formula = diagnosis ~.,
-                           data = heart_fit,
-                           data.test =  heart_NA_20,
-                           main = "Heart Disease",
+breastcancer.fft_NA_20 <- FFTrees(formula = diagnosis ~.,
+                           data = breastcancer_fit,
+                           data.test =  breastcancer_NA_20,
+                           main = "breastcancer Disease",
                            decision.labels = c("Healthy", "Diseased"))
 
 
 # Report on NA cases: 
 tree_level_outcome_vars <- c(1:3, 7:12, 25:30)
-heart.fft_NA_20$trees$level_stats$train[ , tree_level_outcome_vars]
+breastcancer.fft_NA_20$trees$level_stats$train[ , tree_level_outcome_vars]
   
-plot(heart.fft_NA_20, data = "test")
+plot(breastcancer.fft_NA_20, data = "test")
 ```
 
