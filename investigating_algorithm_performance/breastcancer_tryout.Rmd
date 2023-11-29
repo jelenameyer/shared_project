@@ -159,7 +159,7 @@ replace_values <- function(data, cols, amount, replacement = NA, levels_amount =
 
 ```{r}
 # Preparations:
-
+pc <- 0.8
 # get all names of variables but exclude criterion: 
 column_names_breastcancer <- colnames(breastcancer_fit)
 column_names_breastcancer <- column_names_breastcancer[column_names_breastcancer != 'diagnosis']
@@ -167,7 +167,7 @@ column_names_breastcancer <- column_names_breastcancer[column_names_breastcancer
 
 # in total xx% should be NAs in the end, split equally over all variables: 
 num_columns <- length(column_names_breastcancer)
-pc_per_row_20 <- 0.80
+pc_per_row_20 <- pc
 
 # create vector with that pc for number of rows:
 pc_vector_20 <- rep(pc_per_row_20, times = num_columns)
@@ -238,7 +238,7 @@ predictions <- lapply(1:20, function(m) {
 })
 
 # Average the predictions
-avg_predictions <- Reduce("+", predictions) / 20
+avg_predictions <- Reduce("+", predictions) / (pc*100)
 
 # Create binary classification
 class_pred_imputed <- ifelse(avg_predictions > 0.5, 1, 0)

@@ -40,7 +40,7 @@ nrow(heart_predict)
 
 ```{r}
 model <- glm(diagnosis ~ ., data=heart_fit, family="binomial")
-summary(model)
+#summary(model)
 ```
 
 
@@ -164,7 +164,7 @@ replace_values <- function(data, cols, amount, replacement = NA, levels_amount =
 
 ```{r}
 # Preparations:
-pc <- 0.2
+pc <- 0.6
 # get all names of variables but exclude criterion: 
 column_names_heart <- colnames(heart_fit)
 column_names_heart <- column_names_heart[column_names_heart != 'diagnosis']
@@ -212,14 +212,15 @@ require(mice)
 # convert character variables into factor
 heart_NA_20 <- data.frame(lapply(heart_NA_20, function(x) if(is.character(x)) as.factor(x) else x))
 #str(heart_NA_20) 
+heart_NA_20
 ```
 
 
 ```{r}
-
+pc_times_100 <- pc*100
 # Multiple Imputation with the mice package
 # 1. Imputation
-imp.data <- mice (data = heart_NA_20, m = 20, maxit = 10, seed = 123, print=FALSE)
+imp.data <- mice (data = heart_NA_20, m = pc_times_100, maxit = 10, seed = 123, print=FALSE)
 # Which methods were used?
 #imp.data
 # Checking if convergence was achieved
@@ -230,6 +231,8 @@ imp.data <- mice (data = heart_NA_20, m = 20, maxit = 10, seed = 123, print=FALS
 # 3. Pooling the results
 #pool.fit <- pool(reg.fit.mi)
 #summary(pool.fit)
+summary(imp.data)
+imp.data$loggedEvents
 
 ```
 
@@ -238,13 +241,14 @@ imp.data <- mice (data = heart_NA_20, m = 20, maxit = 10, seed = 123, print=FALS
 
 ```{r}
 # Apply the logistic regression model to each imputed data set
-predictions <- lapply(1:pc, function(m) {
+predictions <- lapply(1:pc_times_100, function(m) {
   dataset <- complete(imp.data, m)
+  # print(dataset)
   predict(glm(diagnosis ~., family = "binomial", data = dataset), type = "response")
 })
 
 # Average the predictions
-avg_predictions <- Reduce("+", predictions) / pc
+avg_predictions <- Reduce("+", predictions) / pc_times_100
 
 # Create binary classification
 class_pred_imputed <- ifelse(avg_predictions > 0.5, 1, 0)
@@ -255,7 +259,7 @@ print(confusion_matrix_imputed)
 
 # Calculate accuracy
 accuracy_imputed <- sum(diag(confusion_matrix_imputed)) / sum(confusion_matrix_imputed)
-print(accuracy_imputed)
+#print(accuracy_imputed)
 
 ```
 
@@ -345,8 +349,8 @@ heart.fft <- FFTrees(formula = diagnosis ~ .,
 
 print(heart.fft)
 plot(heart.fft, data = "test")
-str(final_imputed_data)
-str(heart_fit_types_dif)
+#str(final_imputed_data)
+#str(heart_fit_types_dif)
 
 ```
 
