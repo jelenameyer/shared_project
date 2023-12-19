@@ -178,7 +178,6 @@ pc <- 0.1
 column_names_heart <- colnames(heart_fit)
 column_names_heart <- column_names_heart[column_names_heart != 'diagnosis']
 
-
 # in total xx% should be NAs in the end, split equally over all variables: 
 num_columns <- length(column_names_heart)
 pc_per_row_20 <- pc
@@ -198,7 +197,6 @@ heart_NA_20 <- replace_values(data = heart_predict, cols = column_names_heart, a
 
 ```{r}
 # first alternative: LISTWISE DELETION
-
 # predict NA data with old model, LISTWISE DELETION is default anyway
 reg_log_20_NA <- predict(model, heart_NA_20, type = 'response')
 class_pred_20_NA <- ifelse(reg_log_20_NA > 0.5, 1, 0)
