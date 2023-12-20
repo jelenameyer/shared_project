@@ -247,7 +247,7 @@ print(confusion_matrix_20_NA)
 # calculate accuracy
 accuracy_20_NA <- sum(diag(confusion_matrix_20_NA)) / sum(confusion_matrix_20_NA)
 print(accuracy_20_NA) 
-heart_median_imputed
+
 ```
 
 
@@ -278,17 +278,12 @@ heart_NA_20_without_crit <- data.frame(lapply(heart_NA_20_without_crit, function
 # Multiple Imputation with the mice package
 # 1. Imputation
 imp.data <- mice (data = heart_NA_20_without_crit, m = 20, maxit = 10, seed = 123, print=FALSE)
-# Which methods were used?
-#imp.data
-# Checking if convergence was achieved
-#plot(imp.data)
-# 2. Regression for each imputed data set
-#reg.fit.mi <- with(imp.data, glm(diagnosis ~age+sex+cp+trestbps+chol+fbs+restecg+thalach+exang+oldpeak+slope+ca+thal,   family = "binomial"))
-#reg.fit.mi
-# 3. Pooling the results
-#pool.fit <- pool(reg.fit.mi)
-#summary(pool.fit)
 
+```
+
+```{r}
+# Checking if convergence was achieved
+plot(imp.data)
 ```
 
 
@@ -323,7 +318,6 @@ print(accuracy_imputed)
 
 
 ```{r}
-
 # with 20% NAs:
 # build best tree. 20% NAs (standard function)
 heart.fft_NA_20 <- FFTrees(formula = diagnosis ~.,
