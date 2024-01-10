@@ -4,26 +4,89 @@ author: "Jelena Meyer and Hansjörg Neth"
 date: "2023-12-19"
 output: html_document
 ---
+# Comparing how well decision algorithms can handle missing data
 
+
+For a binary decision problem (True/False) different algorithms can use available information (= predictive variables) and predict a specified outcome variable. Here we compare FFTrees and logistic regression.
+
+Both decision models are fitted on training data, there model is saved and new test data is then predicted.
+
+In this analysis we focus on the performance of the two models when they face data with missings.
+We compare different algorithms **accuracy** in classifying different data with missings.
+
+The FFTree package automatically handles missing data: As ssoon as missing data in the next decision node of the model tree arises, the case is simply handed over to the next decision tree. This is done so long until a variable in the tree is available and the tree can classify the case or, if all further variables of the case are missing, the tree classifies according to the baseline of the criterion.
+
+In logistic regression there are multiple ways to handle missings.
+
+The easiest one is listwise deletion (= Complete Case Analysis CCA). Here, all cases where a single variable is missing are excluded and it the case is not classified. 
+For this graphical illustration we figured that in reality one would classify the case as baseline if the algorithm gave no answer, therefore the accuracy score is the sum of all classified cases times there accuracy and all not classified cases times the baseline accuracy divided by the total number of cases in the data set.
+
+When doing CCA, there is a steep slope of loss in information, resulting in one having no classified data anymore when 20-30 percent of every predictive variable (all data) is missing. 
+Therefore we implemented a simpler version that is similar to well-known subset selection methods.
+We looked for a summary of the original regression model and made a subset of data with only the significant predictive variables and the criterion. We think that gives CCA a greater chance to compete, since every missing datapoint in uninformative predictors would otherwise lead to case deletion. The second CCA method is apart from the different dataset implemented exactly as the first one.
+
+The other compared methods are mean imputation and multiple imputation.
+
+Whenever an algorithm did not classify anymore (due to logged events or dimply non information) we set their accuracy to baseline.
+
+
+### Results for the heartdisease data
 
 ```{r}
 # Plot graph
 x <-                      c( 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
 y <-                      c(81, 78, 75, 65, 66, 60, 59, 55, 56, 51, 51)
-y_log_reg_multiple_imp <- c(85, 88, 87, 84, 86, 84, 84, 84, 0, 0, 0)
-y_log_reg_mean_imp <-     c(85, 85, 82, 81, 76, 76, 75, 68, 65, 56, 0)
+y_log_reg_cca <-          c(85, 60, 52, 51, 51, 51, 51, 51, 51, 51, 51) # ab 30 pc kein output mehr!, daher baseline eingesetzt
+y_log_reg_cca_subset <-   c(79, 70, 62, 58, 55, 53, 52, 51, 51, 51, 51) # ab 70 pc kein output mehr!, daher baseline eingesetzt
+y_log_reg_multiple_imp <- c(85, 88, 87, 84, 86, 84, 84, 84, 51, 51, 51) # ab 80 pc kein output mehr!, daher baseline eingesetzt
+y_log_reg_mean_imp <-     c(85, 85, 82, 81, 76, 76, 75, 68, 65, 56, 51) # bei 100 pc kein output mehr!, daher baseline eingesetzt
 baseline <-               c(51, 51, 51, 51, 51, 51, 51, 51, 51, 51, 51)
 
 plot(x, y, type = "b", ylim = c(0,100), col = "red", xlab = "Percentage of missing data", ylab = "Accuracy of predictions",
 main = "Algorithm prediction performance with rising percentages of missings")
+lines(x, y_log_reg_cca, col = "darkgreen", type = "b")
+lines(x, y_log_reg_cca_subset, col = "blue", type = "b")
 lines(x, y_log_reg_multiple_imp, col = "orange", type = "b")
 lines(x, y_log_reg_mean_imp, col = "green", type = "b")
-lines(x, baseline, col = "grey", lty = "dashed")
+lines(x, baseline, col = "black", lty = "dashed")
 
 #lines(x, handle_NA_costs, col = "orange")
 
 # Add a legend to the graph:
-legend("bottomleft", legend = c( "multiple imputation", "median imputation", "FFTrees", "baseline"), col = c("orange", "green", "red", "grey"), lty = "solid")
+legend("bottomleft", legend = c( "multiple imputation", "median imputation", "FFTrees", "complete case analysis with subset", "complete case analysis","baseline"), col = c("orange", "green", "red", "blue", "darkgreen", "black"), lty = "solid")
+
+```
+
+
+## For comparison:
+### Results for the heartdisease data
+
+```{r}
+# Plot graph
+x <-                      c( 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)
+
+y <-                      c(94, 91, 88, 84, 80, 79, 76, 72, 68, 67, 66)
+
+y_log_reg_cca <-          c(95, 77, 69, 66, 66, 66, 66, 66, 66, 66, 66) # ab 40 pc kein output mehr!, daher baseline eingesetzt (jeweils eins davon schon baseline performance)
+y_log_reg_cca_subset <-   c(96, 85, 78, 72, 68, 67, 66, 66, 66, 66, 66) # ab 70 pc kein output mehr!, daher baseline eingesetzt
+
+y_log_reg_multiple_imp <- c(95, 97, 98, 96, 96, 96, 94, 93, 86, 66, 66) # ab 90 pc kein output mehr!, daher baseline eingesetzt
+y_log_reg_mean_imp <-     c(95, 94, 93, 89, 85, 82, 82, 73, 71, 67, 66) 
+
+baseline <-               c(66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66)
+
+plot(x, y, type = "b", ylim = c(0,100), col = "red", xlab = "Percentage of missing data", ylab = "Accuracy of predictions",
+main = "Algorithm prediction performance with rising percentages of missings")
+lines(x, y_log_reg_cca, col = "darkgreen", type = "b")
+lines(x, y_log_reg_cca_subset, col = "blue", type = "b")
+lines(x, y_log_reg_multiple_imp, col = "orange", type = "b")
+lines(x, y_log_reg_mean_imp, col = "green", type = "b")
+lines(x, baseline, col = "black", lty = "dashed")
+
+#lines(x, handle_NA_costs, col = "orange")
+
+# Add a legend to the graph:
+legend("bottomleft", legend = c( "multiple imputation", "median imputation", "FFTrees", "complete case analysis with subset", "complete case analysis","baseline"), col = c("orange", "green", "red", "blue", "darkgreen", "black"), lty = "solid")
 
 ```
 

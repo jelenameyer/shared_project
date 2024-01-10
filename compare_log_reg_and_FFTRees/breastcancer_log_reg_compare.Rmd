@@ -1,5 +1,5 @@
 ---
-title: "Heartdisease_alg_comparison"
+title: "all_data_alg_comparison"
 author: "Jelena Meyer and Hansjörg Neth"
 date: "2023-11-15"
 output: html_document
@@ -8,40 +8,52 @@ output: html_document
 ```{r}
 require(stats)
 require(FFTrees)
+require(mice)
+library(dplyr)
 ```
+
+```{r}
+# here all concrete dataset definitions
+data <- breastcancer
+# criterion muss einmal mit strg f komplett im ganzen doc ersetzt werden!
+# nachdem significant predictors gefunden, händisch umtragen!
+# data_subset_cca <- select(data_fit, cp, ca, trestbps, oldpeak, diagnosis)
+# baseline: 
+baseline <- 0.66
+# Preparations:
+pc <- 0.1
+```
+
+
 
 
 # standardise data, because some algorithms perform better with standardised data (to be fair for those)
 ```{r}
-heartdisease <- as.data.frame(lapply(heartdisease, function(x) {
+data <- as.data.frame(lapply(data, function(x) {
   if(is.numeric(x)) scale(x) else x
 }))
 ```
 
 
-
 # divide data into 50% train and test data:
 ```{r}
-
-nrow(heartdisease)
+nrow(data)
 
 # set seed for reproducability
 set.seed(13)
 
 # take 50% of rows of df and build fitting df
-heart_fit_indices <- sample(nrow(heartdisease), 0.5 * nrow(heartdisease), replace = FALSE)
-heart_fit <- heartdisease[heart_fit_indices,]
-nrow(heart_fit)
+data_fit_indices <- sample(nrow(data), 0.5 * nrow(data), replace = FALSE)
+data_fit <- data[data_fit_indices,]
+nrow(data_fit)
 
 
 # find remaining rows and put into predicting df
-heart_predict_indices <- setdiff(1:nrow(heartdisease), heart_fit_indices)
-heart_predict <- heartdisease[heart_predict_indices,]
-nrow(heart_predict)
-number_cases_to_predict <- nrow(heart_predict)
+data_predict_indices <- setdiff(1:nrow(data), data_fit_indices)
+data_predict <- data[data_predict_indices,]
+nrow(data_predict)
+number_cases_to_predict <- nrow(data_predict)
 ```
-
-
 
 
 
@@ -49,63 +61,64 @@ number_cases_to_predict <- nrow(heart_predict)
 # build regression algorithm with fitting dataset:
 
 ```{r}
-model <- glm(diagnosis ~ ., data=heart_fit, family="binomial")
-#summary(model)
+model <- glm(diagnosis ~ ., data=data_fit, family="binomial")
 ```
 
+# get accuracy statistic
 
 # see how good log reg is with fitted data:
 
 ```{r}
 # build algorithm:
-reg_log <- predict(model, heart_fit, type = 'response')
+reg_log <- predict(model, data_fit, type = 'response')
 class_pred <- ifelse(reg_log > 0.5, 1, 0)
 
 # get confusion matrix
-confusion_matrix <- table(Predicted = class_pred, Actual = heart_fit$diagnosis)
+confusion_matrix <- table(Predicted = class_pred, Actual = data_fit$diagnosis)
 print(confusion_matrix)
 # calculate accuracy
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
 print(accuracy)
 ```
-
-
-# get accuracy statistic
 # see how good log reg predicts new data
 
 ```{r}
 # build algorithm:
-reg_log <- predict(model, heart_predict, type = 'response')
+reg_log <- predict(model, data_predict, type = 'response')
 class_pred <- ifelse(reg_log > 0.5, 1, 0)
 
 # get confusion matrix
-confusion_matrix <- table(Predicted = class_pred, Actual = heart_predict$diagnosis)
+confusion_matrix <- table(Predicted = class_pred, Actual = data_predict$diagnosis)
 print(confusion_matrix)
 # calculate accuracy
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
 print(accuracy)
 ```
+```{r}
+summary(model)
+```
+
 
 # preparations for listwise deletion in subset data
 ```{r}
 summary(model) # we see that only variables: cp, ca are significant predictors, therefore build subset with only these and criterion + almost significant predictors
 
 # fitting data
-heart_subset_cca <- select(heart_fit, cp, ca, trestbps, oldpeak, diagnosis)
+data_subset_cca <- select(data_fit, nucleoli, nuclei.bare, thickness, cellshape.unif, diagnosis)
 
 # prediction data
-heart_subset_cca_predict <- select(heart_predict, cp, ca, trestbps, oldpeak, diagnosis)
+data_subset_cca_predict <- select(data_predict, nucleoli, nuclei.bare, thickness, cellshape.unif, diagnosis)
 
 
 # fit logistic regression model and compare performance
-model_subset_cca <- glm(diagnosis ~ ., data=heart_subset_cca, family="binomial")
+model_subset_cca <- glm(diagnosis ~ ., data=data_subset_cca, family="binomial")
 
 # build algorithm:
-reg_log <- predict(model_subset_cca, heart_subset_cca, type = 'response')
+reg_log <- predict(model_subset_cca, data_subset_cca, type = 'response')
 class_pred <- ifelse(reg_log > 0.5, 1, 0)
 
 # get confusion matrix
-confusion_matrix <- table(Predicted = class_pred, Actual = heart_subset_cca$diagnosis)
+confusion_matrix <- table(Predicted = class_pred, Actual = data_subset_cca$diagnosis)
 print(confusion_matrix)
 # calculate accuracy for train data
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
@@ -114,16 +127,19 @@ print(accuracy)
 
 # see how well for test data
 # build algorithm:
-reg_log <- predict(model_subset_cca, heart_predict, type = 'response')
+reg_log <- predict(model_subset_cca, data_predict, type = 'response')
 class_pred <- ifelse(reg_log > 0.5, 1, 0)
 
 # get confusion matrix
-confusion_matrix <- table(Predicted = class_pred, Actual = heart_predict$diagnosis)
+confusion_matrix <- table(Predicted = class_pred, Actual = data_predict$diagnosis)
 print(confusion_matrix)
 # calculate accuracy
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
 print(accuracy)
 ```
+
+
+
 
 # add missing data (use methods that have been built before)
 
@@ -212,65 +228,66 @@ replace_values <- function(data, cols, amount, replacement = NA, levels_amount =
 ```
 
 ```{r}
-# Preparations:
-pc <- 0.6
-# get all names of variables but exclude criterion: 
-column_names_heart <- colnames(heart_fit)
-column_names_heart <- column_names_heart[column_names_heart != 'diagnosis']
 
+# get all names of variables but exclude criterion: 
+column_names_data <- colnames(data_fit)
+column_names_data <- column_names_data[column_names_data != 'diagnosis']
 
 # in total xx% should be NAs in the end, split equally over all variables: 
-num_columns <- length(column_names_heart)
-pc_per_row_20 <- pc
+num_columns <- length(column_names_data)
+pc_per_row <- pc
 
 # create vector with that pc for number of rows:
-pc_vector_20 <- rep(pc_per_row_20, times = num_columns)
+pc_vector <- rep(pc_per_row, times = num_columns)
 
 # set seed for being able to replicate results:
 set.seed(139)
 
 # apply replace_values function and thereby create new data frame:
-heart_NA_20 <- replace_values(data = heart_predict, cols = column_names_heart, amount = pc_vector_20)
-
+data_NA <- replace_values(data = data_predict, cols = column_names_data, amount = pc_vector)
+#data_NA
 ```
 
 
 
+# apply LISTWISE DELETION
+
 ```{r}
-# add missings in data with only significant predictors (so to not delete to many data)
 
 # get all names of variables but exclude criterion: 
-column_names_heart <- colnames(heart_subset_cca_predict)
-column_names_heart <- column_names_heart[column_names_heart != 'diagnosis']
+column_names_data <- colnames(data_subset_cca_predict)
+column_names_data <- column_names_data[column_names_data != 'diagnosis']
 
 # in total xx% should be NAs in the end, split equally over all variables: 
-num_columns <- length(column_names_heart)
-pc_per_row_20 <- pc
+num_columns <- length(column_names_data)
+pc_per_row <- pc
 
 # create vector with that pc for number of rows:
-pc_vector_20 <- rep(pc_per_row_20, times = num_columns)
+pc_vector <- rep(pc_per_row, times = num_columns)
 
 # set seed for being able to replicate results:
 set.seed(139)
 
 # apply replace_values function and thereby create new data frame:
-heart_NA_subset_cca <- replace_values(data = heart_subset_cca_predict, cols = column_names_heart, amount = pc_vector_20)
-#heart_NA_20
+data_NA_subset_cca <- replace_values(data = data_subset_cca_predict, cols = column_names_data, amount = pc_vector)
+
+
+
 ```
 
 
 ```{r}
 # first alternative: LISTWISE DELETION
 # predict NA data with old model, LISTWISE DELETION is default anyway
-reg_log_20_NA <- predict(model_subset_cca, heart_NA_subset_cca, type = 'response')
-class_pred_20_NA <- ifelse(reg_log_20_NA > 0.5, 1, 0)
-class_pred_20_NA
+reg_log_NA <- predict(model_subset_cca, data_NA_subset_cca, type = 'response')
+class_pred_NA <- ifelse(reg_log_NA > 0.5, 1, 0)
+class_pred_NA
 # get confusion matrix
-confusion_matrix_20_NA <- table(Predicted = class_pred_20_NA, Actual = heart_subset_cca_predict$diagnosis)
-print(confusion_matrix_20_NA)
+confusion_matrix_NA <- table(Predicted = class_pred_NA, Actual = data_subset_cca_predict$diagnosis)
+print(confusion_matrix_NA)
 # calculate accuracy
-accuracy_20_NA <- sum(diag(confusion_matrix_20_NA)) / sum(confusion_matrix_20_NA)
-print(accuracy_20_NA) 
+accuracy_NA <- sum(diag(confusion_matrix_NA)) / sum(confusion_matrix_NA)
+print(accuracy_NA) 
 
 ```
 
@@ -278,19 +295,52 @@ print(accuracy_20_NA)
 ```{r}
 # accuracy calculation:
 # we take accuracy times percent of classified cases plus baseline accuracy times percent of not classified cases
-sum_classified_cases <- confusion_matrix_20_NA[1,1] + confusion_matrix_20_NA[1,2] + confusion_matrix_20_NA[2,1] + confusion_matrix_20_NA[2,2]
+sum_classified_cases <- confusion_matrix_NA[1,1] + confusion_matrix_NA[1,2] + confusion_matrix_NA[2,1] + confusion_matrix_NA[2,2]
 sum_classified_cases
 sum_NOT_classified_cases <- number_cases_to_predict - sum_classified_cases
 sum_NOT_classified_cases
-# baseline: 
-baseline <- 0.51
+
 baseline
-accuracy_20_NA
+accuracy_NA
+
 # calculate accuracy
-((sum_classified_cases * accuracy_20_NA) + (sum_NOT_classified_cases * baseline))/number_cases_to_predict
+((sum_classified_cases * accuracy_NA) + (sum_NOT_classified_cases * baseline))/number_cases_to_predict
 
 
 ```
+
+# alternatively with original dataset:
+
+```{r}
+
+
+# predict NA data with old model
+reg_log_NA <- predict(model, data_NA, type = 'response')
+class_pred_NA <- ifelse(reg_log_NA > 0.5, 1, 0)
+class_pred_NA
+# get confusion matrix
+confusion_matrix_NA <- table(Predicted = class_pred_NA, Actual = data_predict$diagnosis)
+print(confusion_matrix_NA)
+# calculate accuracy
+accuracy_NA <- sum(diag(confusion_matrix_NA)) / sum(confusion_matrix_NA)
+print(accuracy_NA) # so gehts nicht einfach, weill dann einfach nur alle NAs rausgeschmissen und nicht mehr vorhergesagt werden!
+
+
+
+# accuracy calculation:
+# we take accuracy times percent of classified cases plus baseline accuracy times percent of not classified cases
+sum_classified_cases <- confusion_matrix_NA[1,1] + confusion_matrix_NA[1,2] + confusion_matrix_NA[2,1] + confusion_matrix_NA[2,2]
+sum_classified_cases
+sum_NOT_classified_cases <- number_cases_to_predict - sum_classified_cases
+sum_NOT_classified_cases
+
+baseline
+accuracy_NA
+# calculate accuracy
+((sum_classified_cases * accuracy_NA) + (sum_NOT_classified_cases * baseline))/number_cases_to_predict
+
+```
+
 
 
 # median imputation technique
@@ -298,7 +348,7 @@ accuracy_20_NA
 ```{r}
 
 # Replace NA values with the median of each column
-heart_median_imputed <- as.data.frame(lapply(heart_NA_20, function(x) {
+data_median_imputed <- as.data.frame(lapply(data_NA, function(x) {
   if(is.numeric(x)) {
     return(ifelse(is.na(x), median(x, na.rm = TRUE), x))
   } else {
@@ -307,7 +357,7 @@ heart_median_imputed <- as.data.frame(lapply(heart_NA_20, function(x) {
 }))
 
 # Replace NA values in categorical columns with the mode
-heart_median_imputed <- as.data.frame(lapply(heart_median_imputed, function(x) {
+data_median_imputed <- as.data.frame(lapply(data_median_imputed, function(x) {
   if(is.factor(x) || is.character(x)) {
     mode_value <- names(sort(table(x), decreasing = TRUE))[1]
     return(ifelse(is.na(x), mode_value, x))
@@ -317,56 +367,53 @@ heart_median_imputed <- as.data.frame(lapply(heart_median_imputed, function(x) {
 }))
 
 # predict NA data with median imputed model
-reg_log_20_NA <- predict(model, heart_median_imputed, type = 'response')
-class_pred_20_NA <- ifelse(reg_log_20_NA > 0.5, 1, 0)
+reg_log_NA <- predict(model, data_median_imputed, type = 'response')
+class_pred_NA <- ifelse(reg_log_NA > 0.5, 1, 0)
 
 # get confusion matrix
-confusion_matrix_20_NA <- table(Predicted = class_pred_20_NA, Actual = heart_predict$diagnosis)
-print(confusion_matrix_20_NA)
+confusion_matrix_NA <- table(Predicted = class_pred_NA, Actual = data_predict$diagnosis)
+print(confusion_matrix_NA)
 # calculate accuracy
-accuracy_20_NA <- sum(diag(confusion_matrix_20_NA)) / sum(confusion_matrix_20_NA)
-print(accuracy_20_NA) 
-#heart_median_imputed
+accuracy_NA <- sum(diag(confusion_matrix_NA)) / sum(confusion_matrix_NA)
+print(accuracy_NA) 
+#data_median_imputed
+```
+
+# imputation
+```{r}
+# prepare pc
+pc_100 <- pc*100 
+pc_100
 ```
 
 
-
-# somehow handle NA data to be able to use log reg on the new datasets
-
-# imputation
 
 # prepare data (so that criterion is not used in imputation)
 ```{r}
-original_diagnosis <- heart_NA_20$diagnosis
-heart_NA_20_without_crit <- heart_NA_20
-heart_NA_20_without_crit$diagnosis <- NULL
+# remove criterion from data frame with missings, save under new name
+original_diagnosis <- data_NA$diagnosis
+data_NA_without_crit <- data_NA
+data_NA_without_crit$diagnosis <- NULL
+#data_NA_without_crit
 ```
 
 
 ```{r}
-require(mice)
-#str(heart_NA_20) 
 # convert character variables into factor
-heart_NA_20_without_crit <- data.frame(lapply(heart_NA_20_without_crit, function(x) if(is.character(x)) as.factor(x) else x))
-#str(heart_NA_20) 
+data_NA_without_crit <- data.frame(lapply(data_NA_without_crit, function(x) if(is.character(x)) as.factor(x) else x))
+#str(data_NA) 
 ```
 
 
 ```{r}
+
 
 # Multiple Imputation with the mice package
-# 1. Imputation
-imp.data <- mice (data = heart_NA_20_without_crit, m = 20, maxit = 10, seed = 123, print=FALSE)
-# Which methods were used?
-#imp.data
+imp.data <- mice (data = data_NA_without_crit, m = pc_100 , maxit = 10, seed = 123, print=FALSE)
+
 # Checking if convergence was achieved
 #plot(imp.data)
-# 2. Regression for each imputed data set
-#reg.fit.mi <- with(imp.data, glm(diagnosis ~age+sex+cp+trestbps+chol+fbs+restecg+thalach+exang+oldpeak+slope+ca+thal,   family = "binomial"))
-#reg.fit.mi
-# 3. Pooling the results
-#pool.fit <- pool(reg.fit.mi)
-#summary(pool.fit)
+
 
 ```
 
@@ -375,20 +422,20 @@ imp.data <- mice (data = heart_NA_20_without_crit, m = 20, maxit = 10, seed = 12
 
 ```{r}
 # Apply the logistic regression model to each imputed data set
-predictions <- lapply(1:20, function(m) {
+predictions <- lapply(1:pc_100, function(m) {
   dataset <- complete(imp.data, m)
   dataset$diagnosis <- original_diagnosis
   predict(glm(diagnosis ~., family = "binomial", data = dataset), type = "response")
 })
 
 # Average the predictions
-avg_predictions <- Reduce("+", predictions) / 20
+avg_predictions <- Reduce("+", predictions) / pc_100
 
 # Create binary classification
 class_pred_imputed <- ifelse(avg_predictions > 0.5, 1, 0)
 
 # create confusion matrix
-confusion_matrix_imputed <- table(Predicted = class_pred_imputed, Actual = heart_predict$diagnosis)
+confusion_matrix_imputed <- table(Predicted = class_pred_imputed, Actual = data_predict$diagnosis)
 print(confusion_matrix_imputed)
 
 # Calculate accuracy
@@ -398,30 +445,69 @@ print(accuracy_imputed)
 ```
 
 
+
+
+
 # compare performance of best log reg NA handling method on different NA percentages with the performance of other algorithms
 
-
 ```{r}
+# without NAs, baseline performance for train data:
 
-# with 20% NAs:
-# build best tree. 20% NAs (standard function)
-heart.fft_NA_20 <- FFTrees(formula = diagnosis ~.,
-                           data = heart_fit,
-                           data.test =  heart_NA_20,
+# build best tree. (standard function)
+data.fft <- FFTrees(formula = diagnosis ~.,
+                           data = data_fit,
                            goal = "acc",
                            goal.chase = "acc",
                            goal.threshold = "acc",
-                           main = "Heart Disease",
-                           decision.labels = c("Healthy", "Diseased"))
+                           decision.labels = c("True", "False"))
 
 
 # Report on NA cases: 
 tree_level_outcome_vars <- c(1:3, 7:12, 25:30)
-heart.fft_NA_20$trees$level_stats$train[ , tree_level_outcome_vars]
+data.fft$trees$level_stats$train[ , tree_level_outcome_vars]
   
-plot(heart.fft_NA_20, data = "test")
+plot(data.fft, data = "train")
 ```
 
+
+
+```{r}
+# without NAs, baseline performance for test data:
+# build best tree. (standard function)
+data.fft <- FFTrees(formula = diagnosis ~.,
+                           data = data_fit,
+                           data.test =  data_predict,
+                           goal = "acc",
+                           goal.chase = "acc",
+                           goal.threshold = "acc",
+                           decision.labels = c("True", "False"))
+
+
+# Report on NA cases: 
+tree_level_outcome_vars <- c(1:3, 7:12, 25:30)
+data.fft$trees$level_stats$test[ , tree_level_outcome_vars]
+  
+plot(data.fft, data = "test")
+```
+
+
+```{r}
+# build best tree. xx% NAs (standard function)
+data.fft_NA <- FFTrees(formula = diagnosis ~.,
+                           data = data_fit,
+                           data.test =  data_NA,
+                           goal = "acc",
+                           goal.chase = "acc",
+                           goal.threshold = "acc",
+                           decision.labels = c("True", "False"))
+
+
+# Report on NA cases: 
+tree_level_outcome_vars <- c(1:3, 7:12, 25:30)
+data.fft_NA$trees$level_stats$train[ , tree_level_outcome_vars]
+  
+plot(data.fft_NA, data = "test")
+```
 
 
 

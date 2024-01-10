@@ -39,6 +39,7 @@ nrow(heart_fit)
 heart_predict_indices <- setdiff(1:nrow(heartdisease), heart_fit_indices)
 heart_predict <- heartdisease[heart_predict_indices,]
 nrow(heart_predict)
+number_cases_to_predict <- nrow(heart_predict)
 
 ```
 
@@ -84,6 +85,46 @@ print(confusion_matrix)
 accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
 print(accuracy)
 ```
+
+# preparations for listwise deletion in subset data
+```{r}
+summary(model) # we see that only variables: cp, ca are significant predictors, therefore build subset with only these and criterion + almost significant predictors
+
+# fitting data
+heart_subset_cca <- select(heart_fit, cp, ca, trestbps, oldpeak, diagnosis)
+
+# prediction data
+heart_subset_cca_predict <- select(heart_predict, cp, ca, trestbps, oldpeak, diagnosis)
+
+
+# fit logistic regression model and compare performance
+model_subset_cca <- glm(diagnosis ~ ., data=heart_subset_cca, family="binomial")
+
+# build algorithm:
+reg_log <- predict(model_subset_cca, heart_subset_cca, type = 'response')
+class_pred <- ifelse(reg_log > 0.5, 1, 0)
+
+# get confusion matrix
+confusion_matrix <- table(Predicted = class_pred, Actual = heart_subset_cca$diagnosis)
+print(confusion_matrix)
+# calculate accuracy for train data
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+print(accuracy)
+
+
+# see how well for test data
+# build algorithm:
+reg_log <- predict(model_subset_cca, heart_predict, type = 'response')
+class_pred <- ifelse(reg_log > 0.5, 1, 0)
+
+# get confusion matrix
+confusion_matrix <- table(Predicted = class_pred, Actual = heart_predict$diagnosis)
+print(confusion_matrix)
+# calculate accuracy
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+print(accuracy)
+```
+
 
 # add missing data (use methods that have been built before)
 
@@ -197,9 +238,70 @@ heart_NA_20 <- replace_values(data = heart_predict, cols = column_names_heart, a
 # apply LISTWISE DELETION
 
 ```{r}
+# add missings in data with only significant predictors (so to not delete to many data)
+
+# get all names of variables but exclude criterion: 
+column_names_heart <- colnames(heart_subset_cca_predict)
+column_names_heart <- column_names_heart[column_names_heart != 'diagnosis']
+
+# in total xx% should be NAs in the end, split equally over all variables: 
+num_columns <- length(column_names_heart)
+pc_per_row_20 <- pc
+
+# create vector with that pc for number of rows:
+pc_vector_20 <- rep(pc_per_row_20, times = num_columns)
+
+# set seed for being able to replicate results:
+set.seed(139)
+
+# apply replace_values function and thereby create new data frame:
+heart_NA_subset_cca <- replace_values(data = heart_subset_cca_predict, cols = column_names_heart, amount = pc_vector_20)
+#heart_NA_20
+
+
+```
+
+
+
+```{r}
+# first alternative: LISTWISE DELETION
+# predict NA data with old model, LISTWISE DELETION is default anyway
+reg_log_20_NA <- predict(model_subset_cca, heart_NA_subset_cca, type = 'response')
+class_pred_20_NA <- ifelse(reg_log_20_NA > 0.5, 1, 0)
+class_pred_20_NA
+# get confusion matrix
+confusion_matrix_20_NA <- table(Predicted = class_pred_20_NA, Actual = heart_subset_cca_predict$diagnosis)
+print(confusion_matrix_20_NA)
+# calculate accuracy
+accuracy_20_NA <- sum(diag(confusion_matrix_20_NA)) / sum(confusion_matrix_20_NA)
+print(accuracy_20_NA) 
+
+```
+
+```{r}
+# accuracy calculation:
+# we take accuracy times percent of classified cases plus baseline accuracy times percent of not classified cases
+sum_classified_cases <- confusion_matrix_20_NA[1,1] + confusion_matrix_20_NA[1,2] + confusion_matrix_20_NA[2,1] + confusion_matrix_20_NA[2,2]
+sum_classified_cases
+sum_NOT_classified_cases <- number_cases_to_predict - sum_classified_cases
+sum_NOT_classified_cases
+# baseline: 
+baseline <- 0.51
+baseline
+accuracy_20_NA
+# calculate accuracy
+((sum_classified_cases * accuracy_20_NA) + (sum_NOT_classified_cases * baseline))/number_cases_to_predict
+
+
+```
+
+
+# alternatively with original dataset:
+
+```{r}
 # first alternative: LISTWISE DELETION
 
-# predict NA data with old model, LISTWISE DELETION is default anyway
+# predict NA data with old model
 reg_log_20_NA <- predict(model, heart_NA_20, type = 'response')
 class_pred_20_NA <- ifelse(reg_log_20_NA > 0.5, 1, 0)
 class_pred_20_NA
@@ -210,7 +312,23 @@ print(confusion_matrix_20_NA)
 accuracy_20_NA <- sum(diag(confusion_matrix_20_NA)) / sum(confusion_matrix_20_NA)
 print(accuracy_20_NA) # so gehts nicht einfach, weill dann einfach nur alle NAs rausgeschmissen und nicht mehr vorhergesagt werden!
 
+
+
+# accuracy calculation:
+# we take accuracy times percent of classified cases plus baseline accuracy times percent of not classified cases
+sum_classified_cases <- confusion_matrix_20_NA[1,1] + confusion_matrix_20_NA[1,2] + confusion_matrix_20_NA[2,1] + confusion_matrix_20_NA[2,2]
+sum_classified_cases
+sum_NOT_classified_cases <- number_cases_to_predict - sum_classified_cases
+sum_NOT_classified_cases
+# baseline: 
+baseline <- 0.51
+baseline
+accuracy_20_NA
+# calculate accuracy
+((sum_classified_cases * accuracy_20_NA) + (sum_NOT_classified_cases * baseline))/number_cases_to_predict
+
 ```
+
 
 # median imputation technique
 
